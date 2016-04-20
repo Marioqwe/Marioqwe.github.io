@@ -1,0 +1,868 @@
+@import "helpers";
+@import url(https://fonts.googleapis.com/css?family=Josefin+Sans:400,300,600);
+
+
+$field-width: 400px;
+$grid-spacing: 15px;
+$grid-row-cells: 3;
+$tile-size: ($field-width - $grid-spacing * ($grid-row-cells + 1)) / $grid-row-cells;
+$tile-border-radius: 5px;
+
+$text-color: #000000;
+$bright-text-color: #f9f6f2;
+
+$tile-color: #ffffff;
+$tile-gold-color: #edc22e;
+$tile-gold-glow-color: lighten($tile-gold-color, 15%);
+
+$game-container-background: #ffffff;
+
+$game-container-margin-top: 40px;
+
+$transition-speed: 100ms;
+
+html, body {
+  margin: 0;
+  padding: 0;
+
+  background: #ffffff;
+  color: $text-color;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 18px;
+}
+
+body {
+  margin: 80px 0;
+}
+
+.heading {
+  @include clearfix;
+}
+
+h1.title {
+  font-size: 50px;
+  font-weight: bold;
+  margin: 0;
+  //display: block;
+  display: none;
+}
+
+.logo {
+  $width: $field-width/3;
+  $height: $width/2.69;
+
+  width: $width;
+  height: $height;
+}
+
+.scores-container-top {
+  width: $field-width;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  text-align: center;
+}
+
+.moves-container, .level-container {
+  width: 45%;
+  display: inline-block;
+}
+
+.level-score, .level-label, .moves-score, .moves-label {
+  $height: 25px;
+
+  display: inline-block;
+  font-size: $height;
+  height: $height;
+  width: 45%;
+  line-height: $height;
+  text-align: center;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+a {
+  color: $text-color;
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+
+
+.container {
+  width: $field-width;
+  margin: 0 auto;
+}
+
+// Styles for buttons
+@mixin button {
+  display: inline-block;
+  background: $game-container-background;
+  border-radius: 5px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: #ffffff;
+  height: 40px;
+  line-height: 42px;
+}
+
+// Game field mixin used to render CSS at different width
+@mixin game-field {
+  .game-container {
+    margin-top: $game-container-margin-top;
+    position: relative;
+    padding: $grid-spacing;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    background: #ffffff;
+    border-radius: $tile-border-radius * 2;
+    width: $field-width;
+    height: $field-width;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
+    .game-message {
+      display: none;
+
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: #ffffff;
+      z-index: 100;
+
+      text-align: center;
+
+      p {
+        font-size: 60px;
+        font-weight: bold;
+        height: 60px;
+        line-height: 60px;
+        margin-top: 60px;
+      }
+
+      .lower {
+        display: block;
+        margin-top: 60px;
+      }
+
+      a {
+        @include button;
+
+        &.next-level-button {
+          display: none;
+        }
+      }
+
+      @include animation(fade-in 1.5ms ease $transition-speed * 12);
+      @include animation-fill-mode(both);
+
+      &.level-cleared {
+        background: rgba(#ffffff, 0.5);
+        color: #000000;
+
+        a.next-level-button {
+          background: #000000;
+          font-weight: bold;
+          display: inline-block;
+        }
+      }
+
+      &.level-cleared {
+        display: block;
+      }
+    }
+  }
+
+  .grid-container {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .grid-row {
+    margin-bottom: $grid-spacing;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &:after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+  }
+
+  .grid-cell {
+    width: $tile-size;
+    height: $tile-size;
+    margin-right: $grid-spacing;
+    float: left;
+
+    border-radius: $tile-border-radius;
+
+    background: rgba($tile-color, .35);
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
+  .tile-container {
+    position: absolute;
+    z-index: 2;
+  }
+
+  .tile {
+    &, .tile-inner {
+      width: ceil($tile-size);
+      height: ceil($tile-size);
+      line-height: ceil($tile-size);
+    }
+
+    @for $x from 1 through $grid-row-cells {
+      @for $y from 1 through $grid-row-cells {
+        &.tile-position-#{$x}-#{$y} {
+          $xPos: floor(($tile-size + $grid-spacing) * ($x - 1));
+          $yPos: floor(($tile-size + $grid-spacing) * ($y - 1));
+          @include transform(translate($xPos, $yPos));
+        }
+      }
+    }
+  }
+}
+
+// End of game-field mixin
+@include game-field;
+
+@include keyframes(move-up) {
+  0% {
+    top: 25px;
+    opacity: 1;
+  }
+
+  100% {
+    top: -50px;
+    opacity: 0;
+  }
+}
+
+.restart-button {
+  @include button;
+  display: block;
+  text-align: center;
+  float: right;
+}
+
+.scores-container-bottom {
+  width: $field-width;
+  margin-bottom: 50px;
+  text-align: center;
+}
+
+.time-container, .undo-button-container {
+  width: 45%;
+  display: inline-block;
+  vertical-align: top;
+}
+.time-container {
+  text-align: left;
+}
+
+.undo-button-container {
+  text-align: right;
+}
+
+.time-score {
+  $height: $tile-size/2;
+  $width: $tile-size/2;
+
+  display: inline-block;
+  font-size: 25px;
+  height: $height;
+  width: 45%;
+  line-height: $height;
+  text-align: left;
+}
+
+.undo-button {
+  $height: $tile-size/2;
+  $width: $tile-size/2;
+
+  height: $height;
+  width: $width;
+  line-height: $height;
+}
+
+.tile {
+  position: absolute; // Makes transforms relative to the top-left corner
+
+  .tile-addition {
+    position: absolute;
+    font-size: 55px;
+    line-height: $tile-size;
+    font-weight: bold;
+    color: #000000;
+    z-index: 100;
+    @include animation(move-up 600ms ease-in);
+    @include animation-fill-mode(both);
+  }
+
+  .tile-inner {
+    border-radius: $tile-border-radius;
+
+    background: $tile-color;
+    text-align: center;
+    font-weight: bold;
+    z-index: 10;
+
+    font-size: 55px;
+  }
+
+  &.tile-0 .tile-inner {
+    background: #EE3A8C;
+    color: #ffffff;
+  }
+
+  &.tile-1 .tile-inner {
+    background: #CD96CD;
+    color: #ffffff;
+  }
+
+  &.tile-2 .tile-inner {
+    background: #EE82EE;
+    color: #ffffff;
+  }
+
+  &.tile-3 .tile-inner {
+    background: #BA55D3;
+    color: #ffffff;
+  }
+
+  &.tile-4 .tile-inner {
+    background: #E066FF;
+    color: #ffffff;
+  }
+
+  &.tile-5 .tile-inner {
+    background: #B452CD;
+    color: #ffffff;
+  }
+
+  &.tile-6 .tile-inner {
+    background: #9932CC;
+    color: #ffffff;
+  }
+
+  &.tile-7 .tile-inner {
+    background: #8A2BE2;
+    color: #ffffff;
+  }
+
+  &.tile-8 .tile-inner {
+    background: #551A8B;
+    color: #ffffff;
+  }
+
+  &.tile-9 .tile-inner {
+    background: #8968CD;
+    color: #ffffff;
+  }
+
+  &.tile-10 .tile-inner {
+    background: #473C8B;
+    color: #ffffff;
+  }
+
+  &.tile-11 .tile-inner {
+    background: #000080;
+    color: #ffffff;
+  }
+
+  &.tile-12 .tile-inner {
+    background: #3D59AB;
+    color: #ffffff;
+  }
+
+  &.tile-13 .tile-inner {
+    background: #4169E1;
+    color: #ffffff;
+  }
+
+  &.tile-14 .tile-inner {
+    background: #4876FF;
+    color: #ffffff;
+  }
+
+  &.tile-15 .tile-inner {
+    background: #436EEE;
+    color: #ffffff;
+  }
+
+  &.tile-16 .tile-inner {
+    background: #3A5FCD;
+    color: #ffffff;
+  }
+
+  &.tile-17 .tile-inner {
+    background: #6495ED;
+    color: #ffffff;
+  }
+
+  &.tile-18 .tile-inner {
+    background: #1E90FF;
+    color: #ffffff;
+  }
+
+  &.tile-19 .tile-inner {
+    background: #4682B4;
+    color: #ffffff;
+  }
+
+  &.tile-20 .tile-inner {
+    background: #876AFA;
+    color: #ffffff;
+  }
+
+  &.tile-21 .tile-inner {
+    background: #8DB6CD;
+    color: #ffffff;
+  }
+
+  &.tile-22 .tile-inner {
+    background: #7EC0EE;
+    color: #ffffff;
+  }
+
+  &.tile-23 .tile-inner {
+    background: #00BFE1;
+    color: #ffffff;
+  }
+
+  &.tile-24 .tile-inner {
+    background: #33A1C9;
+    color: #ffffff;
+  }
+
+  &.tile-25 .tile-inner {
+    background: #B0E0E6;
+    color: #ffffff;
+  }
+
+  &.tile-26 .tile-inner {
+    background: #5F9EA0;
+    color: #ffffff;
+  }
+
+  &.tile-27 .tile-inner {
+    background: #00CED1;
+    color: #ffffff;
+  }
+
+  &.tile-28 .tile-inner {
+    background: #8DEEEE;
+    color: #ffffff;
+  }
+
+  &.tile-29 .tile-inner {
+    background: #48D1CC;
+    color: #ffffff;
+  }
+
+  &.tile-30 .tile-inner {
+    background: #00C957;
+    color: #ffffff;
+  }
+
+  &.tile-31 .tile-inner {
+    background: #3D9140;
+    color: #ffffff;
+  }
+
+  &.tile-32 .tile-inner {
+    background: #C1CDC1;
+    color: #ffffff;
+  }
+
+  &.tile-33 .tile-inner {
+    background: #8FBC8F;
+    color: #ffffff;
+  }
+
+  &.tile-34 .tile-inner {
+    background: #98FB98;
+    color: #ffffff;
+  }
+
+  &.tile-35 .tile-inner {
+    background: #90EE90;
+    color: #ffffff;
+  }
+
+  &.tile-36 .tile-inner {
+    background: #548B54;
+    color: #ffffff;
+  }
+
+  &.tile-37 .tile-inner {
+    background: #76EE00;
+    color: #ffffff;
+  }
+
+  &.tile-38 .tile-inner {
+    background: #A2CD5A;
+    color: #ffffff;
+  }
+
+  &.tile-39 .tile-inner {
+    background: #9ACD32;
+    color: #ffffff;
+  }
+
+  &.tile-40 .tile-inner {
+    background: #CDCD00;
+    color: #ffffff;
+  }
+
+  &.tile-41 .tile-inner {
+    background: #808000;
+    color: #ffffff;
+  }
+
+  &.tile-42 .tile-inner {
+    background: #CDC673;
+    color: #ffffff;
+  }
+
+  &.tile-43 .tile-inner {
+    background: #8B864E;
+    color: #ffffff;
+  }
+
+  &.tile-44 .tile-inner {
+    background: #F0E68C;
+    color: #ffffff;
+  }
+
+  &.tile-45 .tile-inner {
+    background: #EEE8AA;
+    color: #ffffff;
+  }
+
+  &.tile-46 .tile-inner {
+    background: #EEE9BF;
+    color: #ffffff;
+  }
+
+  &.tile-47 .tile-inner {
+    background: #FFEC8B;
+    color: #ffffff;
+  }
+
+  &.tile-48 .tile-inner {
+    background: #E3CF57;
+    color: #ffffff;
+  }
+
+  &.tile-49 .tile-inner {
+    background: #FFD700;
+    color: #ffffff;
+  }
+
+  &.tile-50 .tile-inner {
+    background: #DAA520;
+    color: #ffffff;
+  }
+
+  &.tile-51 .tile-inner {
+    background: #FFC125;
+    color: #ffffff;
+  }
+
+  &.tile-52 .tile-inner {
+    background: #CD9B1D;
+    color: #ffffff;
+  }
+
+  &.tile-53 .tile-inner {
+    background: #8B6914;
+    color: #ffffff;
+  }
+
+  &.tile-54 .tile-inner {
+    background: #EE9A00;
+    color: #ffffff;
+  }
+
+  &.tile-55 .tile-inner {
+    background: #8B5A00;
+    color: #ffffff;
+  }
+
+  &.tile-56 .tile-inner {
+    background: #EED8AE;
+    color: #ffffff;
+  }
+
+  &.tile-57 .tile-inner {
+    background: #8B7E66;
+    color: #ffffff;
+  }
+
+  &.tile-58 .tile-inner {
+    background: #FFE4B5;
+    color: #ffffff;
+  }
+
+  &.tile-59 .tile-inner {
+    background: #FF9912;
+    color: #ffffff;
+  }
+
+  &.tile-60 .tile-inner {
+    background: #E3A869;
+    color: #ffffff;
+  }
+
+  &.tile-61 .tile-inner {
+    background: #FFA54F;
+    color: #ffffff;
+  }
+
+  &.tile-62 .tile-inner {
+    background: #CD853F;
+    color: #ffffff;
+  }
+
+  &.tile-63 .tile-inner {
+    background: #F4A460;
+    color: #ffffff;
+  }
+
+  &.tile-64 .tile-inner {
+    background: #C76114;
+    color: #ffffff;
+  }
+
+  &.tile-65 .tile-inner {
+    background: #FF7F24;
+    color: #ffffff;
+  }
+
+  &.tile-66 .tile-inner {
+    background: #CD7A1D;
+    color: #ffffff;
+  }
+
+  &.tile-67 .tile-inner {
+    background: #FF7D40;
+    color: #ffffff;
+  }
+
+  &.tile-68 .tile-inner {
+    background: #EE7942;
+    color: #ffffff;
+  }
+
+  &.tile-69 .tile-inner {
+    background: #CD8162;
+    color: #ffffff;
+  }
+
+  &.tile-70 .tile-inner {
+    background: #FF7F50;
+    color: #ffffff;
+  }
+
+  &.tile-71 .tile-inner {
+    background: #CD3700;
+    color: #ffffff;
+  }
+
+  &.tile-72 .tile-inner {
+    background: #FF7256;
+    color: #ffffff;
+  }
+
+  &.tile-73 .tile-inner {
+    background: #EE6A50;
+    color: #ffffff;
+  }
+
+  &.tile-74 .tile-inner {
+    background: #FF6347;
+    color: #ffffff;
+  }
+
+  &.tile-75 .tile-inner {
+    background: #8B3626;
+    color: #ffffff;
+  }
+
+  &.tile-76 .tile-inner {
+    background: #FA8072;
+    color: #ffffff;
+  }
+
+  &.tile-77 .tile-inner {
+    background: #F08072;
+    color: #ffffff;
+  }
+
+  &.tile-78 .tile-inner {
+    background: #FF6A6A;
+    color: #ffffff;
+  }
+
+  &.tile-79 .tile-inner {
+    background: #8B3A3A;
+    color: #ffffff;
+  }
+
+  &.tile-80 .tile-inner {
+    background: #FF4040;
+    color: #ffffff;
+  }
+
+  &.tile-81 .tile-inner {
+    background: #CD3333;
+    color: #ffffff;
+  }
+
+  &.tile-82 .tile-inner {
+    background: #8B2323;
+    color: #ffffff;
+  }
+
+  &.tile-83 .tile-inner {
+    background: #FF3030;
+    color: #ffffff;
+  }
+
+  &.tile-84 .tile-inner {
+    background: #CD2626;
+    color: #ffffff;
+  }
+
+  &.tile-85 .tile-inner {
+    background: #8B1A1A;
+    color: #ffffff;
+  }
+
+  &.tile-86 .tile-inner {
+    background: #FF0000;
+    color: #ffffff;
+  }
+
+  &.tile-87 .tile-inner {
+    background: #EE0000;
+    color: #ffffff;
+  }
+
+  &.tile-88 .tile-inner {
+    background: #CD0000;
+    color: #ffffff;
+  }
+
+  &.tile-89 .tile-inner {
+    background: #800000;
+    color: #ffffff;
+  }
+
+  &.tile-90 .tile-inner {
+    background: #8E388E;
+    color: #ffffff;
+  }
+
+  &.tile-91 .tile-inner {
+    background: #7171C6;
+    color: #ffffff;
+  }
+
+  &.tile-92 .tile-inner {
+    background: #7D9EC0;
+    color: #ffffff;
+  }
+
+  &.tile-93 .tile-inner {
+    background: #388E8E;
+    color: #ffffff;
+  }
+
+  &.tile-94 .tile-inner {
+    background: #71C671;
+    color: #ffffff;
+  }
+
+  &.tile-95 .tile-inner {
+    background: #8E8E38;
+    color: #ffffff;
+  }
+
+  &.tile-96 .tile-inner {
+    background: #C5C1AA;
+    color: #ffffff;
+  }
+
+  &.tile-97 .tile-inner {
+    background: #C67171;
+    color: #ffffff;
+  }
+
+  &.tile-98 .tile-inner {
+    background: #555555;
+    color: #ffffff;
+  }
+
+  &.tile-99 .tile-inner {
+    background: #1E1E1E;
+    color: #ffffff;
+  }
+}
+
+@include keyframes(appear) {
+  0% {
+    opacity: 0;
+    @include transform(scale(0));
+  }
+
+  100% {
+    opacity: 1;
+    @include transform(scale(1));
+  }
+}
+
+.tile-new .tile-inner {
+  @include animation(appear 200ms ease $transition-speed);
+  @include animation-fill-mode(backwards);
+}
+
+@include keyframes(pop) {
+  0% {
+    @include transform(scale(0));
+  }
+
+  50% {
+    @include transform(scale(1.2));
+  }
+
+  100% {
+    @include transform(scale(1));
+  }
+}
+
+.tile-merged .tile-inner {
+  z-index: 20;
+  @include animation(pop 200ms ease $transition-speed);
+  @include animation-fill-mode(backwards);
+}

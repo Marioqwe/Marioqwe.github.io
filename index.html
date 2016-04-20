@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plus Uno</title>
+
+    <link href="style/main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="heading">
+            <h1 class="title">Plus Uno</h1>
+            <img src="Images/logo_black.png" class="logo">
+        </div>
+
+        <hr>
+
+        <div class="scores-container-top">
+            <div class="moves-container">
+                <div class="moves-label">Moves</div>
+                <div class="moves-score">0</div>
+            </div>
+            <div class="level-container">
+                <div class="level-label">Level</div>
+                <div class="level-score">1</div>
+            </div>
+        </div>
+
+        <div class="game-container">
+
+            <div class="game-message">
+                <p></p>
+                <div class="lower">
+                    <a class="next-level-button">Next level</a>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+            </div>
+
+            <div class="tile-container"></div>
+        </div>
+
+        <div class="scores-container-bottom">
+            <div class="time-container">
+                <div class="time-score"></div>
+            </div>
+            <div class="undo-button-container">
+                <img src="Images/undo.png" class="undo-button">
+            </div>
+        </div>
+
+        <hr>
+
+        <p class="game-explanation">
+            <strong>HOW TO PLAY:</strong> Complete each level by making all of the tile's values equal to the current level. The <strong>first</strong> tile you select will <strong>increase by one</strong>. The <strong>second</strong> tile you select will <strong>increase by the first one's value</strong>.
+        </p>
+
+        <hr>
+
+        <p>
+            Created by <a href="https://github.com/Marioqwe" target="_blank">Mario Solano.</a> The layout is partly based on Gabriele Cirulli's <a href="http://gabrielecirulli.github.io/2048/" target="_blank">2048</a>.
+        </p>
+
+    </div>
+
+    <script src="js/bind_polyfill.js"></script>
+    <script src="js/classlist_polyfill.js"></script>
+    <script src="js/animframe_polyfill.js"></script>
+    <script src="js/html_actuator.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/tile.js"></script>
+    <script src="js/input_manager.js"></script>
+    <script src="js/game_manager.js"></script>
+    <script src="js/application.js"></script>
+</body>
+</html>
