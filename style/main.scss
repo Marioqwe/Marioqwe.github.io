@@ -21,6 +21,18 @@ $game-container-margin-top: 40px;
 
 $transition-speed: 100ms;
 
+// Styles for buttons
+@mixin button {
+  display: inline-block;
+  background: #000000;
+  border-radius: 5px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: #ffffff;
+  height: 40px;
+  line-height: 42px;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -39,20 +51,19 @@ body {
   @include clearfix;
 }
 
-h1.title {
-  font-size: 50px;
-  font-weight: bold;
-  margin: 0;
-  //display: block;
-  display: none;
-}
-
 .logo {
   $width: $field-width/3;
   $height: $width/2.69;
 
+  display: inline-block;
   width: $width;
   height: $height;
+}
+
+.restart-button {
+  @include button;
+  float: right;
+  vertical-align: middle;
 }
 
 .scores-container-top {
@@ -96,18 +107,6 @@ a {
 .container {
   width: $field-width;
   margin: 0 auto;
-}
-
-// Styles for buttons
-@mixin button {
-  display: inline-block;
-  background: $game-container-background;
-  border-radius: 5px;
-  padding: 0 20px;
-  text-decoration: none;
-  color: #ffffff;
-  height: 40px;
-  line-height: 42px;
 }
 
 // Game field mixin used to render CSS at different width
@@ -255,13 +254,6 @@ a {
     top: -50px;
     opacity: 0;
   }
-}
-
-.restart-button {
-  @include button;
-  display: block;
-  text-align: center;
-  float: right;
 }
 
 .scores-container-bottom {

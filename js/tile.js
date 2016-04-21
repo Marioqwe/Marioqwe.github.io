@@ -17,3 +17,13 @@ Tile.prototype.setValue = function (value) {
 Tile.prototype.saveOldValue = function (value) {
     this.oldValue = value;
 };
+
+Tile.prototype.serialize = function () {
+    return {
+        position: {
+            x: this.x,
+            y: this.y
+        },
+        value: this.value
+    };
+};
