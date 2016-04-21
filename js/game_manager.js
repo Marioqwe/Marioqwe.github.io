@@ -6,6 +6,7 @@ function GameManager(size, InputManager, Actuator) {
     this.inputManager.on("click", this.performClickAction.bind(this));
     this.inputManager.on("undo", this.undoAction.bind(this));
     this.inputManager.on("moveToNextLevel", this.moveToNextLevel.bind(this));
+    this.inputManager.on("restart", this.restart.bind(this));
 
     this.firstSelected = false;
     this.firstPosition = null;
@@ -192,6 +193,7 @@ GameManager.prototype.newGame = function(level) {
 
 GameManager.prototype.restart = function () {
 
+    this.actuator.continueGame(); // clear the game won message
     this.newGame(1);
     this.grid.resetTilesSelectedState();
 };

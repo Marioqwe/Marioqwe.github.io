@@ -29,6 +29,7 @@ GameInputManager.prototype.listen = function () {
     // Respond to button presses
     this.bindButtonPress(".undo-button", this.undo);
     this.bindButtonPress(".next-level-button", this.moveToNextLevel);
+    this.bindButtonPress(".restart-button", this.restart);
 };
 
 GameInputManager.prototype.listenToTile = function (tileWrapper, position) {
@@ -40,6 +41,11 @@ GameInputManager.prototype.listenToTile = function (tileWrapper, position) {
         self.emit("click", position);
     });
     
+};
+
+GameInputManager.prototype.restart = function (event) {
+    event.preventDefault();
+    this.emit("restart");
 };
 
 GameInputManager.prototype.undo = function (event) {
