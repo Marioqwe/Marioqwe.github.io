@@ -15,15 +15,22 @@ body {
   display: block;
   clear: both; }
 
-h1.title {
-  font-size: 50px;
-  font-weight: bold;
-  margin: 0;
-  display: none; }
-
 .logo {
+  display: inline-block;
   width: 133.33333px;
   height: 49.56629px; }
+
+.restart-button {
+  display: inline-block;
+  background: #000000;
+  border-radius: 5px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: #ffffff;
+  height: 40px;
+  line-height: 42px;
+  float: right;
+  vertical-align: middle; }
 
 .scores-container-top {
   width: 400px;
@@ -99,7 +106,7 @@ a {
       margin-top: 60px; }
     .game-container .game-message a {
       display: inline-block;
-      background: #ffffff;
+      background: #000000;
       border-radius: 5px;
       padding: 0 20px;
       text-decoration: none;
@@ -216,19 +223,6 @@ a {
   100% {
     top: -50px;
     opacity: 0; } }
-.restart-button {
-  display: inline-block;
-  background: #ffffff;
-  border-radius: 5px;
-  padding: 0 20px;
-  text-decoration: none;
-  color: #ffffff;
-  height: 40px;
-  line-height: 42px;
-  display: block;
-  text-align: center;
-  float: right; }
-
 .scores-container-bottom {
   width: 400px;
   margin-bottom: 50px;
