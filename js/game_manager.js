@@ -1,7 +1,8 @@
-function GameManager(size, InputManager, Actuator) {
+function GameManager(size, InputManager, Actuator, StorageManager) {
     this.size = size; // Size of the grid
     this.actuator = new Actuator;
-    this.inputManager = new InputManager();
+    this.inputManager = new InputManager;
+    this.storageManager = new StorageManager;
     
     this.inputManager.on("click", this.performClickAction.bind(this));
     this.inputManager.on("undo", this.undoAction.bind(this));
@@ -18,14 +19,41 @@ function GameManager(size, InputManager, Actuator) {
 
 GameManager.prototype.setup = function () {
 
-    this.grid = new Grid(this.size);
-    this.moves = 0;
-    this.level = 1;
-    this.won = false;
-    this.newTiles = false;
+    var previousState = this.storageManager.getGameState();
 
-    this.addStartTiles();
+    // Reload the game from a previous game if present
+    if (previousState) {
+        this.grid        = new Grid(previousState.grid.size,
+            previousState.grid.cells); // Reload grid
+        this.moves       = previousState.moves;
+        this.level       = previousState.level;
+        this.won         = previousState.won;
+        this.newTiles    = false;
+        this.storedValues = previousState.storedValues;
+    } else {
+        this.grid = new Grid(this.size);
+        this.moves = 0;
+        this.level = 1;
+        this.won = false;
+        this.newTiles = false;
+
+        this.addStartTiles();
+    }
+    
+    
     this.actuate();
+};
+
+// Represent the current game as an object
+GameManager.prototype.serialize = function () {
+    return {
+        grid:        this.grid.serialize(),
+        moves:       this.moves,
+        level:       this.level,
+        won:         this.won,
+        newTiles:    this.newTiles,
+        storedValues:this.storedValues
+    };
 };
 
 GameManager.prototype.addStartTiles = function () {
@@ -47,6 +75,8 @@ GameManager.prototype.addTile = function (position, value) {
 };
 
 GameManager.prototype.actuate = function () {
+
+    this.storageManager.setGameState(this.serialize());
     
     this.actuator.actuate(this.grid, {
         moves: this.moves,
@@ -193,6 +223,7 @@ GameManager.prototype.newGame = function(level) {
 
 GameManager.prototype.restart = function () {
 
+    this.storageManager.clearGameState();
     this.actuator.continueGame(); // clear the game won message
     this.newGame(1);
     this.grid.resetTilesSelectedState();
