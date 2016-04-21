@@ -1,6 +1,3 @@
-# Marioqwe.github.io
-
-
 # Plus Uno
 A small project made to learn javascript/HTML/CSS.
 
