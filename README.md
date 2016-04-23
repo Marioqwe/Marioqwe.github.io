@@ -1,5 +1,5 @@
 # Plus Uno
-A small project made to learn javascript/HTML/CSS.
+Just a small project.
 
 You can play it [here](marioqwe.github.io).
 
