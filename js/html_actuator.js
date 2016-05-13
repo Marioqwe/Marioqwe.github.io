@@ -2,10 +2,12 @@ function HTMLActuator() {
     this.tileContainer              = document.querySelector(".tile-container");
     this.currentMovesScoreContainer = document.querySelector(".moves-score");
     this.currentLevelScoreContainer = document.querySelector(".level-score");
+    this.mergeErrorMessageContainer = document.querySelector(".merge-error-message");
     this.messageContainer = document.querySelector(".game-message");
 
     this.currentMovesScore = 0;
     this.currentLevelScore = 0;
+    this.currentMergeErrorMessage = " ";
 }
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
@@ -24,6 +26,7 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
         
         self.updateCurrentMovesScore(metadata.moves);
         self.updateCurrentLevelScore(metadata.level);
+        self.updateMergeErrorMessage(metadata.mergeErrorMessage);
         
         if (metadata.won === true) {
             self.message();
@@ -116,6 +119,13 @@ HTMLActuator.prototype.updateCurrentLevelScore = function (score) {
     
     this.currentLevelScore = score;
     this.currentLevelScoreContainer.textContent = this.currentLevelScore;
+};
+
+HTMLActuator.prototype.updateMergeErrorMessage = function (message) {
+    this.clearContainer(this.mergeErrorMessageContainer);
+    
+    this.currentMergeErrorMessage = message;
+    this.mergeErrorMessageContainer.textContent = this.currentMergeErrorMessage;
 };
 
 HTMLActuator.prototype.message = function () {

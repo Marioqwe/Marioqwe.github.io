@@ -14,6 +14,8 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
     this.storedValues = [];
     
+    this.mergeErrorMessage = " ";
+    
     this.setup();
 }
 
@@ -83,7 +85,8 @@ GameManager.prototype.actuate = function () {
         level: this.level,
         won: this.won,
         newTiles: this.newTiles,
-        inputManager: this.inputManager
+        inputManager: this.inputManager,
+        mergeErrorMessage: this.mergeErrorMessage
     });
 
 };
@@ -98,7 +101,8 @@ GameManager.prototype.performClickAction = function (position) {
 
         if (this.equalPosition(this.firstPosition, position)) {
             // cannot combine tile with itself
-
+            this.mergeErrorMessage = "You cannot merge a tile with itself!";
+            console.log(this.mergeErrorMessage)
         } else {
             
             var firstTileOldValue = this.grid.tileAtPosition(this.firstPosition).value;
@@ -109,6 +113,7 @@ GameManager.prototype.performClickAction = function (position) {
             
             if ((firstTileNewValue > this.level) || (secondTileNewValue > this.level)) {
                 // tiles cannot have value greater than level
+                this.mergeErrorMessage = "The tiles' values cannot be greater than the current level!";
             } else {
                 this.grid.tileAtPosition(position).setValue(secondTileNewValue);
                 this.grid.tileAtPosition(this.firstPosition).setValue(firstTileNewValue);
@@ -131,6 +136,7 @@ GameManager.prototype.performClickAction = function (position) {
                 });
                 
                 this.moves = this.moves + 1;
+                this.mergeErrorMessage = "";
             }
         }
         

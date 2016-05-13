@@ -34,7 +34,7 @@ body {
 
 .scores-container-top {
   width: 400px;
-  margin-top: 50px;
+  margin-top: 40px;
   margin-bottom: 50px;
   text-align: center; }
 
@@ -48,6 +48,9 @@ body {
   height: 25px;
   width: 45%;
   line-height: 25px;
+  text-align: center; }
+
+.merge-error-message {
   text-align: center; }
 
 p {
@@ -252,14 +255,6 @@ a {
   width: 56.66667px;
   line-height: 56.66667px; }
 
-.share-buttons img {
-  width: 35px;
-  padding: 5px;
-  border: 0;
-  box-shadow: 0;
-  display: inline;
-}
-
 .tile {
   position: absolute; }
   .tile .tile-addition {
@@ -274,10 +269,7 @@ a {
     animation: move-up 600ms ease-in;
     -webkit-animation-fill-mode: both;
     -moz-animation-fill-mode: both;
-    animation-fill-mode: both; 
-    -webkit-user-select: none; /* Chrome/Safari */ 
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+ */}
+    animation-fill-mode: both; }
   .tile .tile-inner {
     border-radius: 5px;
     background: #ffffff;
