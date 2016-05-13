@@ -274,7 +274,10 @@ a {
     animation: move-up 600ms ease-in;
     -webkit-animation-fill-mode: both;
     -moz-animation-fill-mode: both;
-    animation-fill-mode: both; }
+    animation-fill-mode: both; 
+    -webkit-user-select: none; /* Chrome/Safari */ 
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */}
   .tile .tile-inner {
     border-radius: 5px;
     background: #ffffff;
