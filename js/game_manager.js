@@ -209,6 +209,8 @@ GameManager.prototype.newGame = function(level) {
     this.moves = 0;
     this.level = level;
 
+    this.mergeErrorMessage = "";
+
     for (var x = 0; x < this.size; x++) {
         for (var y = 0; y < this.size; y++) {
             this.grid.cells[x][y].value = 1;
