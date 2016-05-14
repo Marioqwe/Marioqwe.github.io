@@ -3,7 +3,7 @@ function HTMLActuator() {
     this.currentMovesScoreContainer = document.querySelector(".moves-score");
     this.currentLevelScoreContainer = document.querySelector(".level-score");
     this.mergeErrorMessageContainer = document.querySelector(".merge-error-message");
-    this.messageContainer = document.querySelector(".game-message");
+    this.messageContainer           = document.querySelector(".game-message");
 
     this.currentMovesScore = 0;
     this.currentLevelScore = 0;

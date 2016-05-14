@@ -8,7 +8,7 @@ html, body {
   font-size: 18px; }
 
 body {
-  margin: 80px 0; }
+  margin: 30px 0; }
 
 .heading:after {
   content: "";
@@ -51,7 +51,9 @@ body {
   text-align: center; }
 
 .merge-error-message {
-  text-align: center; }
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 40px; }
 
 p {
   margin-top: 0;
@@ -98,6 +100,8 @@ a {
     -webkit-animation-fill-mode: both;
     -moz-animation-fill-mode: both;
     animation-fill-mode: both; }
+    .game-container .game-message .important {
+      font-size: 18px; }
     .game-container .game-message p {
       font-size: 60px;
       font-weight: bold;
@@ -228,7 +232,7 @@ a {
     opacity: 0; } }
 .scores-container-bottom {
   width: 400px;
-  margin-bottom: 50px;
+  margin-bottom: 10px;
   text-align: center; }
 
 .time-container, .undo-button-container {
@@ -264,9 +268,9 @@ a {
     font-weight: bold;
     color: #000000;
     z-index: 100;
-    -webkit-animation: move-up 600ms ease-in;
-    -moz-animation: move-up 600ms ease-in;
-    animation: move-up 600ms ease-in;
+    -webkit-animation: move-up 1000ms ease-in;
+    -moz-animation: move-up 1000ms ease-in;
+    animation: move-up 1000ms ease-in;
     -webkit-animation-fill-mode: both;
     -moz-animation-fill-mode: both;
     animation-fill-mode: both; }
@@ -681,5 +685,11 @@ a {
   -webkit-animation-fill-mode: backwards;
   -moz-animation-fill-mode: backwards;
   animation-fill-mode: backwards; }
+
+.share-buttons .fb-share-button {
+  line-height: 18px; }
+.share-buttons .twitter-share-button {
+  line-height: 18px;
+  vertical-align: text-bottom !important; }
 
 /*# sourceMappingURL=main.css.map */

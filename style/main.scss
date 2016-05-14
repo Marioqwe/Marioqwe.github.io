@@ -44,7 +44,7 @@ html, body {
 }
 
 body {
-  margin: 80px 0;
+  margin: 30px 0;
 }
 
 .heading {
@@ -91,6 +91,8 @@ body {
 
 .merge-error-message {
   text-align: center;
+  font-size: 24px;
+  margin-bottom: 40px;
 }
 
 p {
@@ -143,6 +145,11 @@ a {
       z-index: 100;
 
       text-align: center;
+
+      .important {
+        font-size: 18px;
+
+      }
 
       p {
         font-size: 60px;
@@ -260,7 +267,7 @@ a {
 
 .scores-container-bottom {
   width: $field-width;
-  margin-bottom: 50px;
+  margin-bottom: 10px;
   text-align: center;
 }
 
@@ -309,7 +316,7 @@ a {
     font-weight: bold;
     color: #000000;
     z-index: 100;
-    @include animation(move-up 600ms ease-in);
+    @include animation(move-up 1000ms ease-in);
     @include animation-fill-mode(both);
   }
 
@@ -860,4 +867,15 @@ a {
   z-index: 20;
   @include animation(pop 200ms ease $transition-speed);
   @include animation-fill-mode(backwards);
+}
+
+.share-buttons {
+  .fb-share-button {
+    line-height: 18px;
+  }
+
+  .twitter-share-button {
+    line-height: 18px;
+    vertical-align: text-bottom !important;
+  }
 }

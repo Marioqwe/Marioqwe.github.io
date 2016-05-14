@@ -14,7 +14,9 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
     this.storedValues = [];
     
-    this.mergeErrorMessage = " ";
+    this.mergeErrorMessage = "";
+
+    this.mergeErrorCounter = 0;
     
     this.setup();
 }
@@ -32,12 +34,14 @@ GameManager.prototype.setup = function () {
         this.won         = previousState.won;
         this.newTiles    = false;
         this.storedValues = previousState.storedValues;
+        this.mergeErrorMessage = "Make all tiles equal to " + this.level;
     } else {
         this.grid = new Grid(this.size);
         this.moves = 0;
         this.level = 1;
         this.won = false;
         this.newTiles = false;
+        this.mergeErrorMessage = "Make all tiles equal to " + this.level;
 
         this.addStartTiles();
     }
@@ -96,12 +100,22 @@ GameManager.prototype.performClickAction = function (position) {
         this.firstSelected = true;
         this.firstPosition = position;
         this.grid.cells[position.x][position.y].selected = true;
+
+        this.mergeErrorMessage = "Selected tile is " + this.grid.cells[position.x][position.y].value + ". "
+                                        + "\nIt will become " + (this.grid.cells[position.x][position.y].value + 1) + " when you select another tile. "
+                                        + "\nThe next tile you select will increase by " + this.grid.cells[position.x][position.y].value + ".";
+
     } else {
         this.firstSelected = false;
 
         if (this.equalPosition(this.firstPosition, position)) {
             // cannot combine tile with itself
             this.mergeErrorMessage = "You cannot merge a tile with itself!";
+            this.mergeErrorCounter = this.mergeErrorCounter + 1;
+            if (this.mergeErrorCounter > 3) {
+                this.mergeErrorMessage = this.mergeErrorMessage + "\nTry using the undo button (above this message).";
+            }
+
             console.log(this.mergeErrorMessage)
         } else {
             
@@ -113,7 +127,11 @@ GameManager.prototype.performClickAction = function (position) {
             
             if ((firstTileNewValue > this.level) || (secondTileNewValue > this.level)) {
                 // tiles cannot have value greater than level
-                this.mergeErrorMessage = "The tiles' values cannot be greater than the current level!";
+                this.mergeErrorMessage = "The tiles cannot be greater than the current level!";
+                this.mergeErrorCounter = this.mergeErrorCounter + 1;
+                if (this.mergeErrorCounter > 3) {
+                    this.mergeErrorMessage = this.mergeErrorMessage + "\nTry using the undo button (bottom right of board).";
+                }
             } else {
                 this.grid.tileAtPosition(position).setValue(secondTileNewValue);
                 this.grid.tileAtPosition(this.firstPosition).setValue(firstTileNewValue);
@@ -136,7 +154,7 @@ GameManager.prototype.performClickAction = function (position) {
                 });
                 
                 this.moves = this.moves + 1;
-                this.mergeErrorMessage = "";
+                this.mergeErrorMessage = "Make all tiles equal to " + this.level;
             }
         }
         
@@ -180,6 +198,11 @@ GameManager.prototype.undoAction = function () {
     var length = this.storedValues.length;
 
     if (length > 0) {
+        if (this.firstSelected == true) {
+            this.firstSelected = false;
+            this.grid.cells[this.firstPosition.x][this.firstPosition.y].selected = false;
+        }
+
         var firstTile = this.storedValues[length - 1].firstTile;
         var secondTile = this.storedValues[length - 1].secondTile;
 
@@ -200,6 +223,8 @@ GameManager.prototype.undoAction = function () {
         this.storedValues.pop();
     }
 
+    this.mergeErrorMessage = "Make all tiles equal to " + this.level;
+    this.mergeErrorCounter = 0;
     this.followUp();
 };
 
@@ -209,7 +234,8 @@ GameManager.prototype.newGame = function(level) {
     this.moves = 0;
     this.level = level;
 
-    this.mergeErrorMessage = "";
+    this.mergeErrorMessage = "Make all tiles equal to " + this.level;
+    this.mergeErrorCounter = 0;
 
     for (var x = 0; x < this.size; x++) {
         for (var y = 0; y < this.size; y++) {
