@@ -111,7 +111,7 @@ a {
     .game-container .game-message .lower {
       display: block;
       margin-top: 60px; }
-    .game-container .game-message a {
+    .game-container .game-message a.next-level-button, .game-container .game-message a.ios-button, .game-container .game-message a.android-button {
       display: inline-block;
       background: #000000;
       border-radius: 5px;
@@ -120,7 +120,7 @@ a {
       color: #ffffff;
       height: 40px;
       line-height: 42px; }
-      .game-container .game-message a.next-level-button {
+      .game-container .game-message a.next-level-button.next-level-button, .game-container .game-message a.ios-button.next-level-button, .game-container .game-message a.android-button.next-level-button {
         display: none; }
     .game-container .game-message.level-cleared {
       background: rgba(255, 255, 255, 0.5);
