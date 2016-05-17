@@ -167,6 +167,7 @@ GameManager.prototype.performClickAction = function (position) {
 GameManager.prototype.followUp = function () {
     if (this.userWon() === true) {
         // user has won
+        this.mergeErrorMessage = "GET THE APP TO ACCESS THE LEADERBOARD!";
         console.log("YOU WON!");
     }
 
