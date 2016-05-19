@@ -83,7 +83,8 @@ a {
   height: 400px;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  cursor: default; }
   .game-container .game-message {
     display: none;
     position: absolute;
