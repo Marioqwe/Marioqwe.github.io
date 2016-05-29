@@ -222,9 +222,9 @@ GameManager.prototype.followUp = function () {
         } else if (this.level < 3 && this.level > 1) {
             this.mergeErrorMessage = "You are doing good so far.";
         } else if (this.level == 3) {
-            this.mergeErrorMessage = "I guess I was wrong :|";
-        } else if (this.level == 4) {
             this.mergeErrorMessage = "I meant you won't get past level 4.";
+        } else if (this.level == 4) {
+            this.mergeErrorMessage = "I guess I was wrong :|.";
         } else if (this.level == 5) {
             this.mergeErrorMessage = "You are good. There's a surprise if you get past level 7.";
         } else if (this.level == 6) {
