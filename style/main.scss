@@ -133,6 +133,8 @@ a {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 
+    cursor: default;
+
     .game-message {
       display: none;
 
@@ -164,7 +166,7 @@ a {
         margin-top: 60px;
       }
 
-      a {
+      a.next-level-button, a.ios-button, a.android-button {
         @include button;
 
         &.next-level-button {
@@ -867,6 +869,11 @@ a {
   z-index: 20;
   @include animation(pop 200ms ease $transition-speed);
   @include animation-fill-mode(backwards);
+}
+
+.app-store-icons {
+  margin-top: 50px;
+  margin-bottom: 20px;
 }
 
 .share-buttons {

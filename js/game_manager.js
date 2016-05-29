@@ -101,20 +101,73 @@ GameManager.prototype.performClickAction = function (position) {
         this.firstPosition = position;
         this.grid.cells[position.x][position.y].selected = true;
 
-        this.mergeErrorMessage = "Selected tile is " + this.grid.cells[position.x][position.y].value + ". "
-                                        + "\nIt will become " + (this.grid.cells[position.x][position.y].value + 1) + " when you select another tile. "
-                                        + "\nThe next tile you select will increase by " + this.grid.cells[position.x][position.y].value + ".";
+        if (this.level < 4) {
+            this.mergeErrorMessage = "You won't get past level 3.";
+            if (this.moves > 10) {
+                this.mergeErrorMessage = "Is it really taking you that many moves? I know you can do better ...";
+            }
+
+            if (this.moves > 16) {
+                this.mergeErrorMessage = "Nope there won't be a reset level button.";
+            }
+
+            if (this.moves > 20) {
+                this.mergeErrorMessage = "I think you should give up already. Go back to playing 2048.";
+            }
+
+        } else if (this.level == 4) {
+            this.mergeErrorMessage = "I have to say I'm surprised you made it this far. Most people get stuck on level 3 and give up.";
+
+            if (this.moves > 12) {
+                this.mergeErrorMessage = "Is it really taking you that many moves? I know you can do better ...";
+            }
+
+            if (this.moves > 18) {
+                this.mergeErrorMessage = "Nope there won't be a reset level button.";
+            }
+
+            if (this.moves > 22) {
+                this.mergeErrorMessage = "I think you should give up already. Go back to playing 2048.";
+            }
+        } else if (this.level == 5) {
+            this.mergeErrorMessage = "Keep up the good work. The surprise is around the corner.";
+
+            if (this.moves > 14) {
+                this.mergeErrorMessage = "Is it really taking you that many moves? I know you can do better ...";
+            }
+
+            if (this.moves > 20) {
+                this.mergeErrorMessage = "Nope there won't be a reset level button.";
+            }
+
+            if (this.moves > 24) {
+                this.mergeErrorMessage = "I think you should give up already. Go back to playing 2048.";
+            }
+        } else if (this.level == 6) {
+            this.mergeErrorMessage = "I won't bother you anymore";
+
+            if (this.moves > 16) {
+                this.mergeErrorMessage = "Is it really taking you that many moves? I know you can do better ...";
+            }
+
+            if (this.moves > 22) {
+                this.mergeErrorMessage = "Nope there won't be a reset level button.";
+            }
+
+            if (this.moves > 26) {
+                this.mergeErrorMessage = "I think you should give up already. Go back to playing 2048.";
+            }
+        } else if (this.level >= 7) {
+            this.mergeErrorMessage = "There's a leaderboard if you get the app!";
+        }
 
     } else {
         this.firstSelected = false;
 
         if (this.equalPosition(this.firstPosition, position)) {
             // cannot combine tile with itself
-            this.mergeErrorMessage = "You cannot merge a tile with itself!";
+            this.mergeErrorMessage = "You cannot merge a tile with itself! Read the \"HOW TO PLAY\" at the bottom of the page.";
             this.mergeErrorCounter = this.mergeErrorCounter + 1;
-            if (this.mergeErrorCounter > 3) {
-                this.mergeErrorMessage = this.mergeErrorMessage + "\nTry using the undo button (above this message).";
-            }
 
             console.log(this.mergeErrorMessage)
         } else {
@@ -127,11 +180,8 @@ GameManager.prototype.performClickAction = function (position) {
             
             if ((firstTileNewValue > this.level) || (secondTileNewValue > this.level)) {
                 // tiles cannot have value greater than level
-                this.mergeErrorMessage = "The tiles cannot be greater than the current level!";
+                this.mergeErrorMessage = "The tiles cannot be greater than the current level! Read the \"HOW TO PLAY\" at the bottom of the page.";
                 this.mergeErrorCounter = this.mergeErrorCounter + 1;
-                if (this.mergeErrorCounter > 3) {
-                    this.mergeErrorMessage = this.mergeErrorMessage + "\nTry using the undo button (bottom right of board).";
-                }
             } else {
                 this.grid.tileAtPosition(position).setValue(secondTileNewValue);
                 this.grid.tileAtPosition(this.firstPosition).setValue(firstTileNewValue);
@@ -167,8 +217,21 @@ GameManager.prototype.performClickAction = function (position) {
 GameManager.prototype.followUp = function () {
     if (this.userWon() === true) {
         // user has won
-        this.mergeErrorMessage = "GET THE APP TO ACCESS THE LEADERBOARD!";
-        console.log("YOU WON!");
+        if (this.level == 1) {
+            this.mergeErrorMessage = "It doesn't get any easier than level 1.";
+        } else if (this.level <= 3 && this.level > 1) {
+            this.mergeErrorMessage = "You are doing good so far.";
+        } else if (this.level == 4) {
+            this.mergeErrorMessage = "I meant you won't get past level 4.";
+        } else if (this.level == 5) {
+            this.mergeErrorMessage = "You are good. There's a surprise if you get past level 7.";
+        } else if (this.level == 6) {
+            this.mergeErrorMessage = "You are almost there!";
+        } else if (this.level == 7) {
+            this.mergeErrorMessage = "I lied :P! You are good enough now. Get the app and compare your highest level to others in the leaderboard! Also share it with your friends on facebook and/or twitter to support me :).";
+        } else if (this.level >= 8) {
+            this.mergeErrorMessage = "Get the app and share it with your friends if you are enjoying the game! That's the best way you can support me ;). You'll also have access to the leaderboard!";
+        }
     }
 
     this.actuate();

@@ -687,6 +687,10 @@ a {
   -moz-animation-fill-mode: backwards;
   animation-fill-mode: backwards; }
 
+.app-store-icons {
+  margin-top: 50px;
+  margin-bottom: 20px; }
+
 .share-buttons .fb-share-button {
   line-height: 18px; }
 .share-buttons .twitter-share-button {
