@@ -5,9 +5,6 @@
     <title>Plus Uno</title>
 
     <meta name="description" content="A simple yet challenging puzzle that will push your logic skills to the limit.">
-
-
-    <link href="style/main.css" rel="stylesheet" type="text/css">
     
     <meta property="og:title" content="Plus Uno" />
     <meta property="og:description" content="Tap on a number tile and add it with another \nnumber tile. The second number tile increases by the first one. \nThe first number tile increases by one. Make all number tiles reach the same value \nand move onto the next level!" />
@@ -17,6 +14,16 @@
     <meta name="twitter:description" content="Tap on a number tile and add it with another \nnumber tile. The second number tile increases by the first one. \nThe first number tile increases by one. Make all number tiles reach the same value \nand move onto the next level!" />
     <meta name="twitter:image" content="http://marioqwe.github.io/Images/icon.png" />
     <meta name="twitter:url" content="http://marioqwe.github.io/" />
+
+    <!--
+    <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css' />
+    -->
+
+    <link rel='stylesheet prefetch' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css' />
+    <link rel='stylesheet prefetch' href='http://cdnjs.cloudflare.com/ajax/libs/animate.css/3.2.3/animate.min.css' />
+
+    <link href="style/main.css" rel="stylesheet" type="text/css">
+
 </head>
 <body>
     <div id="fb-root"></div>
@@ -38,6 +45,10 @@
         </div>
 
         <hr>
+
+        <div class="container">
+            <div id="pageMessages" />
+        </div>
 
         <div class="scores-container-top">
             <div class="moves-container">
@@ -63,7 +74,7 @@
                     <a href="https://play.google.com/store/apps/details?id=com.mario.plusuno20&hl=en" target="_blank" onclick="ga('send', 'event', 'MobilePromo', 'PlayStore');"><img src="Images/google_play.png" alt="Get it on Google play"/></a>
                 </div>
 
-                <div class="share-buttons">
+                <div class="misc-buttons">
                     <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://git.io/vr39Q" data-text="&quot;Check out Plus Uno, a game to test your logic skills!" data-via="Marioqw3" data-hashtags="PlusUno">Tweet</a>
                     <a class="fb-share-button" data-href="http://marioqwe.github.io" data-layout="button" data-mobile-iframe="true"></a>
                 </div>
@@ -99,15 +110,10 @@
             </div>
         </div>
 
-        <div class="container">
-            <p class="merge-error-message">
-            </p>
-        </div>
-
         <hr>
 
         <p class="game-explanation">
-            <strong>HOW TO PLAY:</strong> Complete each level by making all of the tile's values equal to the current level. The <strong>first</strong> tile you select will <strong>increase by one</strong>. The <strong>second</strong> tile you select will <strong>increase by the first one's value</strong>. Keep in mind that the tile's values cannot be greater than the current level. Example: select tile with value 5 then select tile with value 8. First tile is 5 and second tile is 8. So 5+1=6 and 8+5=13. Enjoy!
+            <strong>HOW TO PLAY:</strong> Select <strong>TWO</strong> tiles to merge them. The <strong>FIRST</strong> tile you select will <strong>INCREASE BY ONE</strong>. The <strong>SECOND</strong> tile you select will <strong>INCREASE BY THE VALUE OF THE FIRST ONE</strong>. Example: select tile with value 5 then select tile with value 8. First tile is 5 and second tile is 8. So 5+1=6 and 8+5=13. Enjoy!
         </p>
 
         <hr>
@@ -119,16 +125,16 @@
         <hr>
 
         <p>
-            Created by <a href="https://github.com/Marioqwe" target="_blank">Mario Solano</a>.
+            Created by <a href="https://github.com/Marioqwe" target="_blank">Marioqwe</a>.
         </p>
 
         <hr>
 
-        <div class="share-buttons">
+        <div class="misc-buttons">
             <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://git.io/vr39Q" data-text="&quot;Check out Plus Uno, a game to test your logic skills!&quot;" data-via="Marioqw3" data-hashtags="PlusUno">Tweet</a>
             <a class="fb-share-button" data-href="http://marioqwe.github.io" data-layout="button" data-mobile-iframe="true"></a>
+            <div class="bitcoin-donate-button" id="coinwidget-bitcoin-1Ec6onfsQmoP9kkL3zkpB6c5sA4PVcXU2i"></div>
         </div>
-
 
     </div>
 
@@ -154,6 +160,34 @@
     </script>
 
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+
+    <script src="https://use.fontawesome.com/83d999137e.js"></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+
+
+    <script src="//blockr.io/js_external/coinwidget/coin.js"></script>
+    <script>
+        CoinWidgetCom.go({
+            wallet_address: '1Ec6onfsQmoP9kkL3zkpB6c5sA4PVcXU2i',
+            currency: 'bitcoin',
+            counter: 'hide',
+            lbl_button: 'Donate',
+            lbl_count: 'donations',
+            lbl_amount: 'BTC',
+            lbl_address: 'Use address below to donate. Thanks!',
+            qrcode: false,
+            alignment: 'bl',
+            decimals: 8,
+            size: "small",
+            color: "dark",
+            countdownFrom: "0",
+            element: "#coinwidget-bitcoin-1Ec6onfsQmoP9kkL3zkpB6c5sA4PVcXU2i",
+            onShow: function(){},
+            onHide: function(){}
+        });
+    </script>
 
 </body>
 </html>

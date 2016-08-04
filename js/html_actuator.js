@@ -2,12 +2,16 @@ function HTMLActuator() {
     this.tileContainer              = document.querySelector(".tile-container");
     this.currentMovesScoreContainer = document.querySelector(".moves-score");
     this.currentLevelScoreContainer = document.querySelector(".level-score");
-    this.mergeErrorMessageContainer = document.querySelector(".merge-error-message");
+    this.alertMessageContainer      = document.querySelector(".alert-message");
     this.messageContainer           = document.querySelector(".game-message");
+
+    this.alertMessageContainerID    = document.querySelector("#pageMessages");
 
     this.currentMovesScore = 0;
     this.currentLevelScore = 0;
-    this.currentMergeErrorMessage = " ";
+    this.currentAlertMessage = " ";
+    
+    this.previousAlertSeverity = " ";
 }
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
@@ -26,8 +30,13 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
         
         self.updateCurrentMovesScore(metadata.moves);
         self.updateCurrentLevelScore(metadata.level);
-        self.updateMergeErrorMessage(metadata.mergeErrorMessage);
-        
+        //self.updateAlertMessage(metadata.alertMessage);
+
+        if (metadata.alertObject != null) {
+            self.createAlert(metadata.alertObject.details, metadata.alertObject.severity);
+            self.previousAlertSeverity = metadata.alertObject.severity;
+        }
+
         if (metadata.won === true) {
             self.message();
         }
@@ -67,7 +76,6 @@ HTMLActuator.prototype.addTile = function (tile, metadata) {
 
         // Add tile effect
         var diff = tile.value - tile.oldValue;
-        console.log(tile.value, tile.oldValue, tile.x, tile.y, diff, wrapper);
         var addition = document.createElement("div");
         addition.classList.add("tile-addition");
         
@@ -121,11 +129,11 @@ HTMLActuator.prototype.updateCurrentLevelScore = function (score) {
     this.currentLevelScoreContainer.textContent = this.currentLevelScore;
 };
 
-HTMLActuator.prototype.updateMergeErrorMessage = function (message) {
-    this.clearContainer(this.mergeErrorMessageContainer);
+HTMLActuator.prototype.updateAlertMessage = function (message) {
+    this.clearContainer(this.alertMessageContainer);
     
-    this.currentMergeErrorMessage = message;
-    this.mergeErrorMessageContainer.textContent = this.currentMergeErrorMessage;
+    this.currentAlertMessage = message;
+    this.alertMessageContainer.textContent = this.currentAlertMessage;
 };
 
 HTMLActuator.prototype.message = function () {
@@ -138,4 +146,50 @@ HTMLActuator.prototype.message = function () {
 
 HTMLActuator.prototype.clearMessage = function () {
     this.messageContainer.classList.remove("level-cleared");
+};
+
+HTMLActuator.prototype.createAlert = function (details, severity) {
+
+    console.log(this.previousAlertSeverity);
+
+    this.clearContainer(this.alertMessageContainerID);
+
+    var alertClasses = ["alert"];
+
+    if (this.previousAlertSeverity == severity) {
+        if (severity != "info") {
+            alertClasses.push("animated");
+            alertClasses.push("flipInX");
+        }
+    } else {
+        alertClasses.push("animated");
+        alertClasses.push("flipInX");
+    }
+
+    alertClasses.push("alert-" + severity.toLowerCase());
+
+    //alertClasses.push("alert-dismissible");
+
+    var msgWrapper = document.createElement("div");
+    this.applyClasses(msgWrapper, alertClasses);
+
+    if (details) {
+        var msgDetailsWrapper = document.createElement("p");
+        msgDetailsWrapper.textContent = details;
+        msgWrapper.appendChild(msgDetailsWrapper);
+    }
+
+    /*
+    var msgCloseWrapper = document.createElement("span");
+    msgCloseWrapper.setAttribute("class", "close");
+    msgCloseWrapper.setAttribute("data-dismiss", "alert");
+
+    var msgCloseWrapperChild = document.createElement("i");
+    msgCloseWrapperChild.setAttribute("class", "fa fa-times-circle");
+    msgCloseWrapper.appendChild(msgCloseWrapperChild);
+
+    msgWrapper.appendChild(msgCloseWrapper);
+    */
+
+    this.alertMessageContainerID.insertBefore(msgWrapper, this.alertMessageContainerID.firstChild);
 };
