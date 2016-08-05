@@ -151,7 +151,7 @@ GameManager.prototype.performClickAction = function (position) {
 GameManager.prototype.followUp = function () {
     if (this.userWon() === true) {
         // user has won
-        this.createAlert("success", "You have completed the current level in " + this.moves + " move(s)!");
+        this.createAlert("success", "You completed the current level in " + this.moves + " move(s)!");
     }
 
     this.actuate();
