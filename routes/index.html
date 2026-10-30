@@ -55,6 +55,8 @@
   #close { position:absolute; top:6px; right:8px; border:0; background:none; font-size:20px;
            color:var(--mute); cursor:pointer; }
   .ghost { background:#fff; color:var(--ink); border:1px solid var(--line); font:inherit; font-weight:600; cursor:pointer; margin-left:6px; }
+  .btn[hidden] { display:none; }
+  #send { border:0; font:inherit; font-weight:600; cursor:pointer; }
   .btn { display:inline-block; margin-top:10px; padding:6px 12px; border-radius:6px; background:var(--accent);
          color:#fff; text-decoration:none; font-weight:600; }
   .pop { font:13px/1.4 system-ui, sans-serif; } .pop b { font-size:14px; }
@@ -323,6 +325,27 @@ function stackSheets() {
   document.documentElement.style.setProperty("--panel-h", pn.offsetParent ? pn.offsetHeight + "px" : "0px");
 }
 
+// ---- "Send to app…" (phones only) ---------------------------------------------
+// Opens the share sheet with the GPX attached, so it goes straight into Garmin
+// Connect, Ride with GPS, Wahoo... Safari only allows sharing directly in the tap,
+// so the file is fetched as soon as a route is selected, not when tapped.
+function gpxName(r) {
+  const base = (D.pretty[r.src[0][0]] || "route").replace(/[^A-Za-z0-9]+/g, " ").trim().replace(/ /g, "-");
+  return `${base}-${r.mi.toFixed(1)}mi.gpx`;
+}
+function prepareSend(r) {
+  const send = document.getElementById("send"), dl = document.getElementById("dl");
+  if (!PHONE() || !navigator.canShare) return;          // desktop: plain download
+  fetch(r.gpx).then(res => res.blob()).then(blob => {
+    const file = new File([blob], gpxName(r), { type: "application/gpx+xml" });
+    if (selected !== r.id || !navigator.canShare({ files: [file] })) return;
+    send.hidden = false; dl.hidden = true;                 // download stays as the fallback
+    send.onclick = () => navigator.share({ files: [file], title: gpxName(r) }).catch(err => {
+      if (err.name !== "AbortError") dl.click();           // share failed: download instead
+    });
+  }).catch(() => {});
+}
+
 // ---- elevation profile ------------------------------------------------------
 // r.prof = [[mile, elevation ft, climb so far ft, lat, lon], ...]
 const svg = document.getElementById("prof-svg"), read = document.getElementById("prof-read");
@@ -512,9 +535,11 @@ function select(id) {
         <span class=sw style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></span>${esc(D.pretty[n] || n)}
         <span class=share>${Math.round(sh * 100)}%</span></label>`).join("")}
     <div class=hint>% = share of this route’s distance. Ticked routes draw on top of the selected one.</div></details>`}
-    <a class=btn href="${r.gpx}" download>Download GPX</a>
+    <a class=btn id=dl href="${r.gpx}" download>Download GPX</a>
+    <button class=btn id=send hidden>Send to app…</button>
     <button class="btn ghost" id=back>← All ${document.getElementById("count").textContent}</button>`);
   document.getElementById("back").onclick = () => select(null);
+  prepareSend(r);
 
   const boxes = [...document.querySelectorAll("#box input.src")];
   const all = document.getElementById("src-all");
