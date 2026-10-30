@@ -69,10 +69,11 @@
   .prof-dot { width:14px; height:14px; border-radius:50%; background:#fff; border:3px solid var(--ink);
               box-shadow:0 1px 4px #0005; pointer-events:none; }
   #summary { display:none; }
-  details.srcs > summary { cursor:pointer; list-style:none; }
-  details.srcs > summary::-webkit-details-marker { display:none; }
-  details.srcs > summary h2::after { content:" ▸"; }
-  details.srcs[open] > summary h2::after { content:" ▾"; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:5px; margin:0; padding:3px 9px; border:1px solid var(--line);
+          border-radius:999px; font-size:13px; background:#fff; }
+  .chip .share { margin-left:2px; }
+  .chip:has(input:checked) { border-color:var(--ink); background:#f5f5f4; }
   /* Phones: everything is a compact sheet at the bottom so the map keeps the screen. */
   @media (max-width:600px) {
     .maplibregl-ctrl-top-left { display:none; }
@@ -85,7 +86,7 @@
     #panel:not(.collapsed) #summary { margin-bottom:8px; }
     #panel .hint, #count-row { display:none; }
     #prof { left:8px; right:8px; bottom:20px; padding:6px 10px 4px; }
-    #prof-read { font-size:12px; gap:10px; }
+    #prof-read { font-size:12px; gap:10px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden; height:18px; }
     #prof-read .tip { display:none; }
     #prof-svg { height:64px; }
     #box { top:auto; bottom:calc(28px + var(--prof-h, 0px)); left:8px; right:8px; width:auto; max-width:none; max-height:45%; }
@@ -382,9 +383,12 @@ function setCursor(i) {
   for (const [k, v] of [["x1", X], ["x2", X]]) prof.cursor.setAttribute(k, v);
   prof.dot.setAttribute("cx", X); prof.dot.setAttribute("cy", Y);
   prof.cursor.setAttribute("visibility", "visible"); prof.dot.setAttribute("visibility", "visible");
-  read.innerHTML = `<span>Mile <b>${p[0].toFixed(1)}</b></span><span>Elevation <b>${p[1].toLocaleString()} ft</b></span>
-    <span>Climbed so far <b>↑ ${p[2].toLocaleString()} ft</b></span>
-    <span style="color:var(--mute)">of ${prof.r.ft.toLocaleString()} ft</span>`;
+  read.innerHTML = PHONE()
+    ? `<span><b>${p[0].toFixed(1)}</b> mi</span><span><b>${p[1].toLocaleString()}</b> ft</span>
+       <span>↑ <b>${p[2].toLocaleString()}</b> of ${prof.r.ft.toLocaleString()} ft</span>`
+    : `<span>Mile <b>${p[0].toFixed(1)}</b></span><span>Elevation <b>${p[1].toLocaleString()} ft</b></span>
+       <span>Climbed so far <b>↑ ${p[2].toLocaleString()} ft</b></span>
+       <span style="color:var(--mute)">of ${prof.r.ft.toLocaleString()} ft</span>`;
   marker.setLngLat([p[4], p[3]]).addTo(m);
 }
 function clearCursor() {
@@ -506,12 +510,20 @@ function select(id) {
     ${r.city ? `<div class=sub><b>Heads through town:</b> the new section is much more built-up than the original.</div>` : ""}
     ${r.gap >= ONEWAY_MI ? `<div class=sub><b>One-way ride:</b> finishes ${fmt(r.gap)} mi (straight line) from the start.</div>` : ""}
     ${r.kind === "orig" ? `<div class=sub>Club route: ${esc(D.pretty[r.src[0][0]])}</div>` : `
-    <details class=srcs ${PHONE() ? "" : "open"}><summary><h2>Built from ${r.src.length} club routes</h2></summary>
+    ${PHONE() ? `
+    <h2>Built from · tap to show</h2>
+    <div class=chips>
+      <label class=chip><input type=checkbox id=src-all hidden><b>All</b></label>
+      ${r.src.map(([n, sh], i) => `<label class=chip><input type=checkbox class=src data-i=${i} hidden>
+        <span class=sw style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></span>${esc(D.pretty[n] || n)}
+        <span class=share>${Math.round(sh * 100)}%</span></label>`).join("")}
+    </div>` : `
+    <h2>Built from these club routes</h2>
     <label><input type=checkbox id=src-all> <b>Show all on map</b></label>
     ${r.src.map(([n, sh], i) => `<label><input type=checkbox class=src data-i=${i}>
         <span class=sw style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></span>${esc(D.pretty[n] || n)}
         <span class=share>${Math.round(sh * 100)}%</span></label>`).join("")}
-    <div class=hint>% = share of this route’s distance. Ticked routes draw on top of the selected one.</div></details>`}
+    <div class=hint>% = share of this route’s distance. Ticked routes draw on top of the selected one.</div>`}`}
     <a class=btn href="${r.gpx}" download>Download GPX</a>
     <button class="btn ghost" id=back>← All ${document.getElementById("count").textContent}</button>`);
   document.getElementById("back").onclick = () => select(null);
