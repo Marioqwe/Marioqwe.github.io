@@ -68,12 +68,31 @@
   #prof-svg text { font:11px system-ui, sans-serif; fill:var(--mute); }
   .prof-dot { width:14px; height:14px; border-radius:50%; background:#fff; border:3px solid var(--ink);
               box-shadow:0 1px 4px #0005; pointer-events:none; }
+  #summary { display:none; }
+  details.srcs > summary { cursor:pointer; list-style:none; }
+  details.srcs > summary::-webkit-details-marker { display:none; }
+  details.srcs > summary h2::after { content:" ▸"; }
+  details.srcs[open] > summary h2::after { content:" ▾"; }
+  /* Phones: everything is a compact sheet at the bottom so the map keeps the screen. */
   @media (max-width:600px) {
-    #panel { left:8px; right:8px; bottom:24px; width:auto; max-width:none; }
-    #prof { left:8px; right:8px; bottom:24px; }
-    #prof-svg { height:90px; }
-    #box { top:8px; left:8px; right:8px; width:auto; max-width:none; max-height:45%; }
-    #list { top:8px; left:8px; right:8px; width:auto; max-width:none; max-height:40%; }
+    .maplibregl-ctrl-top-left { display:none; }
+    .card { border-radius:14px; padding:10px 12px; }
+    #panel { left:8px; right:8px; bottom:20px; width:auto; max-width:none; max-height:65%; overflow:auto; }
+    #panel h1 { display:none; }
+    #summary { display:flex; align-items:center; gap:12px; }
+    #summary #sum-text { flex:1; font-weight:600; font-size:14px; }
+    #panel.collapsed #filters { display:none; }
+    #panel:not(.collapsed) #summary { margin-bottom:8px; }
+    #panel .hint, #count-row { display:none; }
+    #prof { left:8px; right:8px; bottom:20px; padding:6px 10px 4px; }
+    #prof-read { font-size:12px; gap:10px; }
+    #prof-read .tip { display:none; }
+    #prof-svg { height:64px; }
+    #box { top:auto; bottom:calc(28px + var(--prof-h, 0px)); left:8px; right:8px; width:auto; max-width:none; max-height:45%; }
+    #box .big { font-size:19px; margin:0 28px 2px 0; }
+    #box .btn { margin-top:6px; padding:5px 10px; font-size:14px; }
+    #box h2 { margin:6px 0 2px; }
+    #list { top:auto; bottom:calc(28px + var(--panel-h, 0px)); left:8px; right:8px; width:auto; max-width:none; max-height:50%; }
   }
 </style>
 
@@ -81,6 +100,9 @@
 
 <div id=panel class=card>
   <h1>Club route explorer <a href="../" style="float:right;font-size:12px;font-weight:400;color:var(--mute)">← Home</a></h1>
+  <div id=summary><span id=sum-text></span>
+    <button class=linkbtn id=filters-toggle>Filters</button><button class=linkbtn id=list-toggle-m>List</button></div>
+  <div id=filters>
   <div class=row><span>Distance</span><span id=dist-label class=val></span></div>
   <div class=dual id=dist>
     <div class=track></div><div class=fill></div>
@@ -95,12 +117,13 @@
     <input type=range class=hi aria-label="Maximum climbing">
   </div>
   <div class=ends><span class=min-end></span><span class=max-end></span></div>
-  <div class=row style="margin-top:8px"><span id=count></span><button id=list-toggle class=linkbtn>List routes</button></div>
+  <div class=row id=count-row style="margin-top:8px"><span id=count></span><button id=list-toggle class=linkbtn>List routes</button></div>
   <div class=toggles>
     <label><input type=checkbox id=t-orig checked><span class=sw style="background:#16a34a"></span>Club routes</label>
     <label><input type=checkbox id=t-gen checked><span class=sw style="background:#2563eb"></span>Generated routes</label>
     <label><input type=checkbox id=t-oneway><span class=sw style="background:repeating-linear-gradient(90deg,#78716c 0 4px,transparent 4px 7px)"></span>Include one-way rides</label>
     <label><input type=checkbox id=t-stops checked><span class=dot style="background:#d97706"></span>Club café stops</label>
+  </div>
   </div>
   <div class=hint>Click a route to select it. Café stops show along the selected route.</div>
 </div>
@@ -232,6 +255,9 @@ function applyRange() {
   dist.paint(); climb.paint();
   const n = D.routes.filter(inRange).length;
   document.getElementById("count").textContent = `${n} route${n === 1 ? "" : "s"}`;
+  const cl = climb.label();
+  document.getElementById("sum-text").textContent =
+    `${dist.label()} · ${cl === "any" ? "any climbing" : "↑ " + cl} · ${n} route${n === 1 ? "" : "s"}`;
   if (!m.getLayer("routes")) return;
   const filt = ["all", ["in", ["get", "kind"], ["literal", kinds()]]];
   if (!oneway()) filt.push(["<", ["get", "gap"], ONEWAY_MI]);
@@ -268,6 +294,35 @@ function cafePopup(f) {
     ${safeWeb ? `<a href="${esc(safeWeb)}" target=_blank rel=noopener>Website ↗</a>` : ""}</div>`;
 }
 
+// ---- phone layout ------------------------------------------------------------
+const PHONE = () => window.matchMedia("(max-width:600px)").matches;
+const TOUCH = window.matchMedia("(hover: none)").matches;
+const panelEl = document.getElementById("panel");
+if (PHONE()) panelEl.classList.add("collapsed");
+document.getElementById("filters-toggle").onclick = () => {
+  panelEl.classList.toggle("collapsed");
+  stackSheets();
+  document.getElementById("filters-toggle").textContent = panelEl.classList.contains("collapsed") ? "Filters" : "Done";
+};
+document.getElementById("list-toggle-m").onclick = () => document.getElementById("list-toggle").click();
+
+// Padding that keeps a fitted route clear of the panels.
+function freeArea() {
+  if (!PHONE()) return { top: 40, bottom: 190, left: 320, right: 330 };
+  const tops = ["box", "prof"].map(id => document.getElementById(id))
+    .filter(el => el.offsetParent).map(el => el.getBoundingClientRect().top);
+  const cover = tops.length ? window.innerHeight - Math.min(...tops) : 0;
+  return { top: 24, bottom: Math.min(cover + 16, window.innerHeight * 0.75), left: 24, right: 24 };
+}
+// On phones the route card sits right above the elevation profile.
+function stackSheets() {
+  const pr = document.getElementById("prof");
+  document.documentElement.style.setProperty("--prof-h", pr.offsetParent ? pr.offsetHeight + "px" : "0px");
+  // ...and the route list sits right above the filter panel.
+  const pn = document.getElementById("panel");   // (runs before panelEl is defined on first load)
+  document.documentElement.style.setProperty("--panel-h", pn.offsetParent ? pn.offsetHeight + "px" : "0px");
+}
+
 // ---- elevation profile ------------------------------------------------------
 // r.prof = [[mile, elevation ft, climb so far ft, lat, lon], ...]
 const svg = document.getElementById("prof-svg"), read = document.getElementById("prof-read");
@@ -279,11 +334,13 @@ function showProfile(r) {
   document.getElementById("panel").style.display = "none";
   document.getElementById("prof").style.display = "block";
   drawProfile(r);
+  stackSheets();
 }
 function hideProfile() {
   prof = null;
   marker.remove();
   document.getElementById("prof").style.display = "none";
+  stackSheets();
   document.getElementById("panel").style.display = "";
 }
 
@@ -317,7 +374,7 @@ function readDefault() {
   const P = prof.r.prof;
   read.innerHTML = `<span>Climbing <b>↑ ${prof.r.ft.toLocaleString()} ft</b></span>
     <span>High point <b>${Math.max(...P.map(p => p[1])).toLocaleString()} ft</b></span>
-    <span style="color:var(--mute)">Hover or drag along the profile to follow the route</span>`;
+    <span class=tip style="color:var(--mute)">${TOUCH ? "Drag" : "Hover or drag"} along the profile to follow the route</span>`;
 }
 
 function setCursor(i) {
@@ -346,7 +403,7 @@ svg.addEventListener("pointermove", e => {
   setCursor(i);
 });
 svg.addEventListener("pointerleave", clearCursor);
-window.addEventListener("resize", () => { if (prof) drawProfile(prof.r); });
+window.addEventListener("resize", () => { if (prof) drawProfile(prof.r); stackSheets(); });
 
 // Hovering the selected route on the map moves the profile cursor too.
 function nearestProf(lngLat) {
@@ -362,6 +419,8 @@ function renderList() {
   const show = listOpen && selected === null && document.getElementById("box").style.display !== "block";
   document.getElementById("list").style.display = show ? "flex" : "none";
   document.getElementById("list-toggle").textContent = listOpen ? "Hide list" : "List routes";
+  document.getElementById("list-toggle-m").textContent = listOpen ? "Hide list" : "List";
+  stackSheets();
   if (!show) return;
   const key = document.getElementById("list-sort").value;
   const rs = D.routes.filter(inRange).sort((a, b) => a[key] - b[key] || a.mi - b.mi);
@@ -399,7 +458,7 @@ function onClick(e) {
   if (hits.length === 0) return select(null);
   if (hits.length === 1) return select(hits[0].id);
   // Several routes overlap here: let the user pick one.
-  showBox(`<div class=big>${hits.length} routes here</div><div class=sub>Hover to preview, click to select.</div>` +
+  showBox(`<div class=big>${hits.length} routes here</div><div class=sub>${TOUCH ? "Tap one to select it." : "Hover to preview, click to select."}</div>` +
     hits.map(r => `<button class=pick data-id=${r.id}><b>${fmt(r.mi)} mi</b> ↑ ${r.ft.toLocaleString()} ft
        <span style="color:var(--mute)"> · ${r.kind === "orig" ? "club route" : "generated"}</span></button>`).join(""));
   document.querySelectorAll("#box .pick").forEach(b => {
@@ -447,12 +506,12 @@ function select(id) {
     ${r.city ? `<div class=sub><b>Heads through town:</b> the new section is much more built-up than the original.</div>` : ""}
     ${r.gap >= ONEWAY_MI ? `<div class=sub><b>One-way ride:</b> finishes ${fmt(r.gap)} mi (straight line) from the start.</div>` : ""}
     ${r.kind === "orig" ? `<div class=sub>Club route: ${esc(D.pretty[r.src[0][0]])}</div>` : `
-    <h2>Built from these club routes</h2>
+    <details class=srcs ${PHONE() ? "" : "open"}><summary><h2>Built from ${r.src.length} club routes</h2></summary>
     <label><input type=checkbox id=src-all> <b>Show all on map</b></label>
     ${r.src.map(([n, sh], i) => `<label><input type=checkbox class=src data-i=${i}>
         <span class=sw style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></span>${esc(D.pretty[n] || n)}
         <span class=share>${Math.round(sh * 100)}%</span></label>`).join("")}
-    <div class=hint>% = share of this route’s distance. Ticked routes draw on top of the selected one.</div>`}
+    <div class=hint>% = share of this route’s distance. Ticked routes draw on top of the selected one.</div></details>`}
     <a class=btn href="${r.gpx}" download>Download GPX</a>
     <button class="btn ghost" id=back>← All ${document.getElementById("count").textContent}</button>`);
   document.getElementById("back").onclick = () => select(null);
@@ -471,7 +530,6 @@ function select(id) {
   const bb = new maplibregl.LngLatBounds();
   r.line.forEach(([la, lo]) => bb.extend([lo, la]));
   showProfile(r);
-  const wide = window.innerWidth > 600;
-  m.fitBounds(bb, { padding: { top: 40, bottom: wide ? 190 : 380, left: wide ? 320 : 30, right: wide ? 330 : 30 }, maxZoom: 13 });
+  m.fitBounds(bb, { padding: freeArea(), maxZoom: 13 });
 }
 </script>
