@@ -1,0 +1,477 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Club Route Explorer</title>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=stylesheet href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="explore_data.js"></script>
+<style>
+  :root { --ink:#1c1917; --mute:#78716c; --line:#e7e5e4; --accent:#ea580c; --route:#2563eb; }
+  html, body, #m { height:100%; margin:0; font:14px/1.4 system-ui, sans-serif; color:var(--ink); }
+  .card { position:absolute; z-index:2; background:#fff; border-radius:10px;
+          box-shadow:0 2px 10px #0003; padding:12px 14px; }
+  #panel { left:10px; bottom:30px; width:280px; max-width:calc(100% - 48px); }
+  #panel h1 { font-size:15px; margin:0 0 8px; }
+  .row { display:flex; justify-content:space-between; align-items:baseline; }
+  .row .val { font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; }
+  #count { font-weight:600; }
+  #count { color:var(--mute); }
+  .dual { position:relative; height:28px; margin:6px 4px 4px; }
+  .dual .track { position:absolute; top:12px; left:0; right:0; height:4px; border-radius:2px; background:var(--line); }
+  .dual .fill { position:absolute; top:12px; height:4px; border-radius:2px; background:var(--route); }
+  .dual input { position:absolute; left:0; width:100%; top:2px; margin:0; background:none;
+                pointer-events:none; -webkit-appearance:none; appearance:none; height:24px; }
+  .dual input::-webkit-slider-thumb { pointer-events:auto; -webkit-appearance:none; width:22px; height:22px;
+                border-radius:50%; background:#fff; border:2px solid var(--route); cursor:grab; }
+  .dual input::-moz-range-thumb { pointer-events:auto; width:18px; height:18px; border-radius:50%;
+                background:#fff; border:2px solid var(--route); cursor:grab; }
+  .ends { display:flex; justify-content:space-between; color:var(--mute); font-size:12px; }
+  .toggles { margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }
+  label { display:flex; align-items:center; gap:6px; margin:3px 0; cursor:pointer; }
+  .dot { width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px #0002; flex:none; }
+  .sw { width:16px; height:4px; border-radius:2px; flex:none; }
+  #list { top:10px; right:10px; width:280px; max-width:calc(100% - 48px); max-height:calc(100% - 60px);
+          display:none; flex-direction:column; padding:0; overflow:hidden; }
+  #list-head { display:flex; align-items:center; justify-content:space-between; gap:8px;
+               padding:10px 14px 8px; border-bottom:1px solid var(--line); }
+  #list-head select { font:inherit; font-size:12px; border:1px solid var(--line); border-radius:6px; padding:2px 4px; }
+  #list-body { overflow:auto; }
+  .item { display:flex; align-items:center; gap:8px; width:100%; padding:7px 14px; border:0; border-bottom:1px solid var(--line);
+          background:#fff; font:inherit; text-align:left; cursor:pointer; }
+  .item:hover, .item.on { background:#fff7ed; }
+  .item .mi { font-weight:700; font-variant-numeric:tabular-nums; min-width:58px; }
+  .item .ft { color:var(--mute); font-variant-numeric:tabular-nums; flex:1; }
+  .item .tag { font-size:11px; color:var(--mute); }
+  .linkbtn { border:0; background:none; padding:0; font:inherit; font-weight:600; color:var(--route); cursor:pointer; }
+  #box { top:10px; right:10px; width:300px; max-width:calc(100% - 48px); max-height:calc(100% - 60px);
+         overflow:auto; display:none; }
+  #box .big { font-size:22px; font-weight:700; margin-bottom:4px; }
+  #box .sub { color:var(--mute); margin-bottom:8px; }
+  #box h2 { font-size:13px; margin:10px 0 4px; text-transform:uppercase; letter-spacing:.04em; color:var(--mute); }
+  #box .share { margin-left:auto; color:var(--mute); font-variant-numeric:tabular-nums; }
+  #box .pick { display:block; width:100%; text-align:left; font:inherit; padding:6px 8px; margin:3px 0;
+               border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; }
+  #box .pick:hover { border-color:var(--accent); }
+  #close { position:absolute; top:6px; right:8px; border:0; background:none; font-size:20px;
+           color:var(--mute); cursor:pointer; }
+  .ghost { background:#fff; color:var(--ink); border:1px solid var(--line); font:inherit; font-weight:600; cursor:pointer; margin-left:6px; }
+  .btn { display:inline-block; margin-top:10px; padding:6px 12px; border-radius:6px; background:var(--accent);
+         color:#fff; text-decoration:none; font-weight:600; }
+  .pop { font:13px/1.4 system-ui, sans-serif; } .pop b { font-size:14px; }
+  .pop-sub { color:var(--mute); margin:2px 0 6px; }
+  .pop a { display:block; color:var(--route); text-decoration:none; font-weight:600; margin-top:3px; }
+  .hint { color:var(--mute); font-size:12px; margin-top:6px; }
+  #prof { left:10px; right:10px; bottom:30px; display:none; padding:8px 12px 6px; }
+  #prof-read { display:flex; gap:14px; flex-wrap:wrap; font-size:13px; min-height:18px; }
+  #prof-read b { font-variant-numeric:tabular-nums; }
+  #prof-svg { display:block; width:100%; height:110px; touch-action:none; cursor:crosshair; }
+  #prof-svg text { font:11px system-ui, sans-serif; fill:var(--mute); }
+  .prof-dot { width:14px; height:14px; border-radius:50%; background:#fff; border:3px solid var(--ink);
+              box-shadow:0 1px 4px #0005; pointer-events:none; }
+  @media (max-width:600px) {
+    #panel { left:8px; right:8px; bottom:24px; width:auto; max-width:none; }
+    #prof { left:8px; right:8px; bottom:24px; }
+    #prof-svg { height:90px; }
+    #box { top:8px; left:8px; right:8px; width:auto; max-width:none; max-height:45%; }
+    #list { top:8px; left:8px; right:8px; width:auto; max-width:none; max-height:40%; }
+  }
+</style>
+
+<div id=m></div>
+
+<div id=panel class=card>
+  <h1>Club route explorer <a href="../" style="float:right;font-size:12px;font-weight:400;color:var(--mute)">← Home</a></h1>
+  <div class=row><span>Distance</span><span id=dist-label class=val></span></div>
+  <div class=dual id=dist>
+    <div class=track></div><div class=fill></div>
+    <input type=range class=lo aria-label="Minimum distance">
+    <input type=range class=hi aria-label="Maximum distance">
+  </div>
+  <div class=ends><span class=min-end></span><span class=max-end></span></div>
+  <div class=row style="margin-top:10px"><span>Climbing</span><span id=climb-label class=val></span></div>
+  <div class=dual id=climb>
+    <div class=track></div><div class=fill></div>
+    <input type=range class=lo aria-label="Minimum climbing">
+    <input type=range class=hi aria-label="Maximum climbing">
+  </div>
+  <div class=ends><span class=min-end></span><span class=max-end></span></div>
+  <div class=row style="margin-top:8px"><span id=count></span><button id=list-toggle class=linkbtn>List routes</button></div>
+  <div class=toggles>
+    <label><input type=checkbox id=t-orig checked><span class=sw style="background:#16a34a"></span>Club routes</label>
+    <label><input type=checkbox id=t-gen checked><span class=sw style="background:#2563eb"></span>Generated routes</label>
+    <label><input type=checkbox id=t-oneway><span class=sw style="background:repeating-linear-gradient(90deg,#78716c 0 4px,transparent 4px 7px)"></span>Include one-way rides</label>
+    <label><input type=checkbox id=t-stops checked><span class=dot style="background:#d97706"></span>Club café stops</label>
+  </div>
+  <div class=hint>Click a route to select it. Café stops show along the selected route.</div>
+</div>
+
+<div id=prof class=card><div id=prof-read></div><svg id=prof-svg></svg></div>
+
+<div id=list class=card>
+  <div id=list-head><b id=list-title></b>
+    <span><select id=list-sort aria-label="Sort by"><option value=mi>By distance</option><option value=ft>By climbing</option></select>
+    <button class=linkbtn id=list-close aria-label="Close list" style="color:var(--mute);font-size:18px;margin-left:6px">×</button></span>
+  </div>
+  <div id=list-body></div>
+</div>
+
+<div id=box class=card><button id=close aria-label=Close>×</button><div id=box-body></div></div>
+
+<script>
+const D = window.DATA;
+const SRC_COLORS = ["#e11d48","#7c3aed","#0891b2","#ca8a04","#16a34a","#c026d3","#4f46e5","#0d9488"];
+const lonlat = line => line.map(([la, lo]) => [lo, la]);
+const byId = Object.fromEntries(D.routes.map(r => [r.id, r]));
+const fmt = x => x.toFixed(1);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---- distance & climbing sliders ---------------------------------------------
+// Each slider caps its right end ("100+ mi", "5,000+ ft") so a few epic rides
+// don't squash the useful range.
+function dualSlider(id, values, { cap, step, unit, from, to, round }) {
+  const el = document.getElementById(id);
+  const lo = el.querySelector(".lo"), hi = el.querySelector(".hi"), fill = el.querySelector(".fill");
+  const MIN = Math.floor(Math.min(...values) / round) * round;
+  const MAX = Math.min(cap, Math.ceil(Math.max(...values) / round) * round);
+  const TOP = Math.max(...values) > MAX;
+  const n = v => v.toLocaleString();
+  for (const x of [lo, hi]) { x.min = MIN; x.max = MAX; x.step = step; }
+  lo.value = Math.max(MIN, from ?? MIN); hi.value = Math.min(MAX, to ?? MAX);
+  const ends = el.nextElementSibling;   // the ".ends" row under the slider
+  ends.querySelector(".min-end").textContent = `${n(MIN)} ${unit}`;
+  ends.querySelector(".max-end").textContent = `${n(MAX)}${TOP ? "+" : ""} ${unit}`;
+  const api = {
+    get() { const a = Math.min(+lo.value, +hi.value), b = Math.max(+lo.value, +hi.value);
+            return [a, TOP && b === MAX ? Infinity : b]; },
+    label() { const [a, b] = api.get();
+              if (b === Infinity) return a === MIN ? "any" : `${n(a)}+ ${unit}`;
+              return a === b ? `${n(a)} ${unit}` : `${n(a)}–${n(b)} ${unit}`; },
+    paint() { const [a, b] = api.get(), B = Math.min(b, MAX);
+              fill.style.left = (a - MIN) / (MAX - MIN) * 100 + "%";
+              fill.style.right = (MAX - B) / (MAX - MIN) * 100 + "%"; },
+    onInput(f) { lo.addEventListener("input", f); hi.addEventListener("input", f); },
+  };
+  return api;
+}
+const dist = dualSlider("dist", D.routes.map(r => r.mi), { cap: 100, step: 1, round: 5, unit: "mi", from: 30, to: 50 });
+const climb = dualSlider("climb", D.routes.map(r => r.ft), { cap: 5000, step: 100, round: 500, unit: "ft" });
+
+// ---- map -------------------------------------------------------------------
+const m = new maplibregl.Map({ container: "m", style: "https://tiles.openfreemap.org/styles/liberty" });
+m.addControl(new maplibregl.NavigationControl(), "top-left");
+const all = new maplibregl.LngLatBounds();
+D.routes.forEach(r => r.line.forEach(([la, lo]) => all.extend([lo, la])));
+m.fitBounds(all, { padding: 40, duration: 0 });
+
+let selected = null;
+let listOpen = false;   // the optional route list on the right
+const empty = { type: "FeatureCollection", features: [] };
+const fc = feats => ({ type: "FeatureCollection", features: feats });
+const lineF = (coords, props = {}) => ({ type: "Feature", properties: props,
+                                          geometry: { type: "LineString", coordinates: lonlat(coords) } });
+
+m.on("load", () => {
+  m.addSource("routes", { type: "geojson", data: fc(D.routes.map(r => lineF(r.line, { id: r.id, mi: r.mi, ft: r.ft, kind: r.kind, gap: r.gap }))) });
+  m.addSource("hover", { type: "geojson", data: empty });
+  m.addSource("sel", { type: "geojson", data: empty });
+  m.addSource("det", { type: "geojson", data: empty });
+  m.addSource("src", { type: "geojson", data: empty });
+  m.addSource("pins", { type: "geojson", data: empty });
+
+  m.addLayer({ id: "routes", type: "line", source: "routes",
+               layout: { "line-join": "round", "line-cap": "round" },
+               paint: { "line-color": ["match", ["get", "kind"], "orig", "#16a34a", "#2563eb"],
+                        "line-width": 2.5, "line-opacity": 0.4 } });
+  // Wide invisible copy so thin lines are easy to click.
+  m.addLayer({ id: "routes-hit", type: "line", source: "routes",
+               paint: { "line-color": "#000", "line-width": 16, "line-opacity": 0 } });
+  m.addLayer({ id: "hover", type: "line", source: "hover", layout: { "line-join": "round", "line-cap": "round" },
+               paint: { "line-color": "#ea580c", "line-width": 5, "line-opacity": 0.9 } });
+  m.addLayer({ id: "sel", type: "line", source: "sel", layout: { "line-join": "round", "line-cap": "round" },
+               paint: { "line-color": "#ea580c", "line-width": 6, "line-opacity": 0.95 } });
+  m.addLayer({ id: "det", type: "line", source: "det", layout: { "line-join": "round", "line-cap": "round" },
+               paint: { "line-color": "#7c2d12", "line-width": 3, "line-dasharray": [2, 1.5] } });
+  m.addLayer({ id: "src", type: "line", source: "src", layout: { "line-join": "round", "line-cap": "round" },
+               paint: { "line-color": ["get", "color"], "line-width": 3, "line-opacity": 0.9 } });
+  m.addLayer({ id: "stops", type: "circle", source: "pins", filter: ["==", ["get", "stop"], 1],
+               paint: { "circle-radius": 9, "circle-color": "#d97706", "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
+
+  for (const id of ["stops"]) {
+    m.on("click", id, e => {
+      new maplibregl.Popup({ maxWidth: "260px" }).setLngLat(e.lngLat).setHTML(cafePopup(e.features[0])).addTo(m);
+      e.originalEvent.cafeClick = true;
+    });
+    m.on("mouseenter", id, () => m.getCanvas().style.cursor = "pointer");
+    m.on("mouseleave", id, () => m.getCanvas().style.cursor = "");
+  }
+  m.on("mousemove", e => {
+    if (m.queryRenderedFeatures(e.point, { layers: ["stops"] }).length) return;
+    m.getCanvas().style.cursor = hitsAt(e.point).length ? "pointer" : "";
+  });
+  m.on("click", onClick);
+  m.on("mousemove", "sel", e => { if (prof) setCursor(nearestProf(e.lngLat)); });
+  m.on("mouseleave", "sel", clearCursor);
+  applyRange();
+  applyPinToggles();
+});
+
+// ---- filtering -------------------------------------------------------------
+// Start and end more than half a mile apart: point-to-point rides (Ptown ferry,
+// Marathon finish line...). Hidden unless asked for, since most rides are loops.
+const ONEWAY_MI = 0.5;
+const oneway = () => document.getElementById("t-oneway").checked;
+function kinds() { return [["orig", "t-orig"], ["gen", "t-gen"]].filter(([, id]) => document.getElementById(id).checked).map(([k]) => k); }
+function inRange(r) {
+  const [a, b] = dist.get(), [c, d] = climb.get();
+  return kinds().includes(r.kind) && r.mi >= a && r.mi <= b && r.ft >= c && r.ft <= d && (oneway() || r.gap < ONEWAY_MI);
+}
+
+function applyRange() {
+  document.getElementById("dist-label").textContent = dist.label();
+  document.getElementById("climb-label").textContent = climb.label();
+  dist.paint(); climb.paint();
+  const n = D.routes.filter(inRange).length;
+  document.getElementById("count").textContent = `${n} route${n === 1 ? "" : "s"}`;
+  if (!m.getLayer("routes")) return;
+  const filt = ["all", ["in", ["get", "kind"], ["literal", kinds()]]];
+  if (!oneway()) filt.push(["<", ["get", "gap"], ONEWAY_MI]);
+  const [a, b] = dist.get(), [c, d] = climb.get();
+  filt.push([">=", ["get", "mi"], a], [">=", ["get", "ft"], c]);
+  if (b !== Infinity) filt.push(["<=", ["get", "mi"], b]);
+  if (d !== Infinity) filt.push(["<=", ["get", "ft"], d]);
+  m.setFilter("routes", filt);
+  m.setFilter("routes-hit", filt);
+  if (selected !== null) select(null);
+  renderList();
+}
+applyRange();
+for (const id of ["t-orig", "t-gen", "t-oneway"]) document.getElementById(id).addEventListener("change", applyRange);
+dist.onInput(applyRange);
+climb.onInput(applyRange);
+
+function applyPinToggles() {
+  if (!m.getLayer("stops")) return;
+  m.setLayoutProperty("stops", "visibility", document.getElementById("t-stops").checked ? "visible" : "none");
+}
+document.getElementById("t-stops").addEventListener("change", applyPinToggles);
+
+// ---- café popups -------------------------------------------------------------
+// Google Maps finds the actual business when we know its address; otherwise
+// drop a pin at the exact spot so it's never the wrong branch of a chain.
+function cafePopup(f) {
+  const { name, web, addr } = f.properties, [lo, la] = f.geometry.coordinates;
+  const q = addr ? `${name}, ${addr}` : `${la.toFixed(5)},${lo.toFixed(5)}`;
+  const maps = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+  const safeWeb = /^https?:\/\//.test(web || "") ? web : "";
+  return `<div class=pop><b>${esc(name)}</b><div class=pop-sub>Club café stop${addr ? " · " + esc(addr) : ""}</div>
+    <a href="${esc(maps)}" target=_blank rel=noopener>Open in Google Maps ↗</a>
+    ${safeWeb ? `<a href="${esc(safeWeb)}" target=_blank rel=noopener>Website ↗</a>` : ""}</div>`;
+}
+
+// ---- elevation profile ------------------------------------------------------
+// r.prof = [[mile, elevation ft, climb so far ft, lat, lon], ...]
+const svg = document.getElementById("prof-svg"), read = document.getElementById("prof-read");
+const NS = "http://www.w3.org/2000/svg";
+const marker = new maplibregl.Marker({ element: Object.assign(document.createElement("div"), { className: "prof-dot" }) });
+let prof = null;   // { r, x, y, cursor, dot } for the selected route
+
+function showProfile(r) {
+  document.getElementById("panel").style.display = "none";
+  document.getElementById("prof").style.display = "block";
+  drawProfile(r);
+}
+function hideProfile() {
+  prof = null;
+  marker.remove();
+  document.getElementById("prof").style.display = "none";
+  document.getElementById("panel").style.display = "";
+}
+
+function drawProfile(r) {
+  const P = r.prof, W = svg.clientWidth, H = svg.clientHeight, L = 40, B = 16;
+  const lo = Math.min(...P.map(p => p[1])), hi = Math.max(...P.map(p => p[1]));
+  const span = Math.max(hi - lo, 100), base = lo - span * 0.05, top = base + span * 1.1;
+  const end = P[P.length - 1][0] || 1;
+  const x = mi => L + mi / end * (W - L - 4);
+  const y = ft => 4 + (1 - (ft - base) / (top - base)) * (H - B - 6);
+  const color = r.kind === "orig" ? "#16a34a" : "#ea580c";
+  const line = P.map((p, i) => `${i ? "L" : "M"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join("");
+  const ticks = [0, end / 2, end].map(mi =>
+    `<text x="${x(mi)}" y="${H - 3}" text-anchor="${mi === 0 ? "start" : mi === end ? "end" : "middle"}">${mi.toFixed(0)} mi</text>`);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = `
+    <line x1="${L}" x2="${W}" y1="${y(hi)}" y2="${y(hi)}" stroke="#e7e5e4"/>
+    <line x1="${L}" x2="${W}" y1="${y(lo)}" y2="${y(lo)}" stroke="#e7e5e4"/>
+    <text x="${L - 4}" y="${y(hi) + 4}" text-anchor="end">${hi.toLocaleString()}</text>
+    <text x="${L - 4}" y="${y(lo) + 4}" text-anchor="end">${lo.toLocaleString()} ft</text>
+    <path d="${line}L${x(end)},${H - B}L${x(0)},${H - B}Z" fill="${color}" fill-opacity=".15"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+    ${ticks.join("")}
+    <line id=pc x1=0 x2=0 y1=0 y2="${H - B}" stroke="#1c1917" stroke-width="1" visibility="hidden"/>
+    <circle id=pd r=4 fill="#fff" stroke="#1c1917" stroke-width="2" visibility="hidden"/>`;
+  prof = { r, x, y, cursor: svg.querySelector("#pc"), dot: svg.querySelector("#pd") };
+  readDefault();
+}
+
+function readDefault() {
+  const P = prof.r.prof;
+  read.innerHTML = `<span>Climbing <b>↑ ${prof.r.ft.toLocaleString()} ft</b></span>
+    <span>High point <b>${Math.max(...P.map(p => p[1])).toLocaleString()} ft</b></span>
+    <span style="color:var(--mute)">Hover or drag along the profile to follow the route</span>`;
+}
+
+function setCursor(i) {
+  const p = prof.r.prof[i], X = prof.x(p[0]), Y = prof.y(p[1]);
+  for (const [k, v] of [["x1", X], ["x2", X]]) prof.cursor.setAttribute(k, v);
+  prof.dot.setAttribute("cx", X); prof.dot.setAttribute("cy", Y);
+  prof.cursor.setAttribute("visibility", "visible"); prof.dot.setAttribute("visibility", "visible");
+  read.innerHTML = `<span>Mile <b>${p[0].toFixed(1)}</b></span><span>Elevation <b>${p[1].toLocaleString()} ft</b></span>
+    <span>Climbed so far <b>↑ ${p[2].toLocaleString()} ft</b></span>
+    <span style="color:var(--mute)">of ${prof.r.ft.toLocaleString()} ft</span>`;
+  marker.setLngLat([p[4], p[3]]).addTo(m);
+}
+function clearCursor() {
+  if (!prof) return;
+  prof.cursor.setAttribute("visibility", "hidden"); prof.dot.setAttribute("visibility", "hidden");
+  marker.remove();
+  readDefault();
+}
+
+svg.addEventListener("pointermove", e => {
+  if (!prof) return;
+  const P = prof.r.prof, rect = svg.getBoundingClientRect(), px = e.clientX - rect.left;
+  let i = P.findIndex(p => prof.x(p[0]) >= px);
+  if (i < 0) i = P.length - 1;
+  if (i > 0 && px - prof.x(P[i - 1][0]) < prof.x(P[i][0]) - px) i--;
+  setCursor(i);
+});
+svg.addEventListener("pointerleave", clearCursor);
+window.addEventListener("resize", () => { if (prof) drawProfile(prof.r); });
+
+// Hovering the selected route on the map moves the profile cursor too.
+function nearestProf(lngLat) {
+  const P = prof.r.prof, c = Math.cos(lngLat.lat * Math.PI / 180);
+  let best = 0, bd = Infinity;
+  P.forEach((p, i) => { const d = (p[3] - lngLat.lat) ** 2 + ((p[4] - lngLat.lng) * c) ** 2; if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+
+// ---- list of matching routes -------------------------------------------------
+// Optional panel on the right; hover an entry to highlight it, click to select.
+function renderList() {
+  const show = listOpen && selected === null && document.getElementById("box").style.display !== "block";
+  document.getElementById("list").style.display = show ? "flex" : "none";
+  document.getElementById("list-toggle").textContent = listOpen ? "Hide list" : "List routes";
+  if (!show) return;
+  const key = document.getElementById("list-sort").value;
+  const rs = D.routes.filter(inRange).sort((a, b) => a[key] - b[key] || a.mi - b.mi);
+  document.getElementById("list-title").textContent = `${rs.length} route${rs.length === 1 ? "" : "s"}`;
+  document.getElementById("list-body").innerHTML = rs.map(r => `<button class=item data-id=${r.id}>
+      <span class=sw style="background:${r.kind === "orig" ? "#16a34a" : "#2563eb"}"></span>
+      <span class=mi>${fmt(r.mi)} mi</span><span class=ft>↑ ${r.ft.toLocaleString()} ft</span>
+      <span class=tag>${[r.pins.length ? "☕" : "", r.gap >= ONEWAY_MI ? "one-way" : "", r.kind === "orig" ? "club" : ""].filter(Boolean).join(" · ")}</span>
+    </button>`).join("") || `<div class=sub style="padding:10px 14px">No routes match.</div>`;
+}
+document.getElementById("list-body").addEventListener("mouseover", e => {
+  const b = e.target.closest(".item");
+  if (b && m.getSource("hover")) m.getSource("hover").setData(fc([lineF(byId[b.dataset.id].line)]));
+});
+document.getElementById("list-body").addEventListener("mouseleave", () => {
+  if (m.getSource("hover")) m.getSource("hover").setData(empty);
+});
+document.getElementById("list-body").addEventListener("click", e => {
+  const b = e.target.closest(".item");
+  if (b) select(+b.dataset.id);
+});
+document.getElementById("list-toggle").onclick = () => { listOpen = !listOpen; renderList(); };
+document.getElementById("list-close").onclick = () => { listOpen = false; renderList(); };
+document.getElementById("list-sort").onchange = renderList;
+
+// ---- selection -------------------------------------------------------------
+function hitsAt(p) {
+  const feats = m.queryRenderedFeatures([[p.x - 6, p.y - 6], [p.x + 6, p.y + 6]], { layers: ["routes-hit"] });
+  return [...new Set(feats.map(f => f.properties.id))].map(id => byId[id]).sort((a, b) => a.mi - b.mi);
+}
+
+function onClick(e) {
+  if (e.originalEvent.cafeClick || selected !== null) return;
+  const hits = hitsAt(e.point);
+  if (hits.length === 0) return select(null);
+  if (hits.length === 1) return select(hits[0].id);
+  // Several routes overlap here: let the user pick one.
+  showBox(`<div class=big>${hits.length} routes here</div><div class=sub>Hover to preview, click to select.</div>` +
+    hits.map(r => `<button class=pick data-id=${r.id}><b>${fmt(r.mi)} mi</b> ↑ ${r.ft.toLocaleString()} ft
+       <span style="color:var(--mute)"> · ${r.kind === "orig" ? "club route" : "generated"}</span></button>`).join(""));
+  document.querySelectorAll("#box .pick").forEach(b => {
+    const r = byId[b.dataset.id];
+    b.onmouseenter = () => m.getSource("hover").setData(fc([lineF(r.line)]));
+    b.onmouseleave = () => m.getSource("hover").setData(empty);
+    b.onclick = () => select(r.id);
+  });
+}
+
+function showBox(inner) {
+  document.getElementById("list").style.display = "none";
+  document.getElementById("box-body").innerHTML = inner;
+  document.getElementById("box").style.display = "block";
+}
+document.getElementById("close").onclick = () => select(null);
+
+let savedView = null;
+function select(id) {
+  selected = id;
+  m.getSource("hover").setData(empty);
+  if (id === null) {
+    for (const s of ["sel", "det", "src", "pins"]) m.getSource(s).setData(empty);
+    for (const l of ["routes", "routes-hit"]) m.setLayoutProperty(l, "visibility", "visible");
+    if (savedView) m.easeTo(savedView);
+    savedView = null;
+    document.getElementById("box").style.display = "none";
+    renderList();
+    hideProfile();
+    return;
+  }
+  const r = byId[id];
+  // Hide every other route; "Back" brings them (and the previous view) back.
+  if (!savedView) savedView = { center: m.getCenter(), zoom: m.getZoom() };
+  for (const l of ["routes", "routes-hit"]) m.setLayoutProperty(l, "visibility", "none");
+  m.setPaintProperty("sel", "line-color", r.kind === "orig" ? "#16a34a" : "#ea580c");
+  m.getSource("sel").setData(fc([lineF(r.line)]));
+  m.getSource("det").setData(r.det.length ? fc([lineF(r.det)]) : empty);
+  m.getSource("pins").setData(fc(r.pins.map(([la, lo, name, stop, web, addr]) => ({ type: "Feature",
+    properties: { name, stop, web, addr }, geometry: { type: "Point", coordinates: [lo, la] } }))));
+  m.getSource("src").setData(empty);
+
+  showBox(`
+    <div class=big>${fmt(r.mi)} mi <span style="font-size:15px;font-weight:600;color:var(--mute)">↑ ${r.ft.toLocaleString()} ft</span></div>
+    ${r.city ? `<div class=sub><b>Heads through town:</b> the new section is much more built-up than the original.</div>` : ""}
+    ${r.gap >= ONEWAY_MI ? `<div class=sub><b>One-way ride:</b> finishes ${fmt(r.gap)} mi (straight line) from the start.</div>` : ""}
+    ${r.kind === "orig" ? `<div class=sub>Club route: ${esc(D.pretty[r.src[0][0]])}</div>` : `
+    <h2>Built from these club routes</h2>
+    <label><input type=checkbox id=src-all> <b>Show all on map</b></label>
+    ${r.src.map(([n, sh], i) => `<label><input type=checkbox class=src data-i=${i}>
+        <span class=sw style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></span>${esc(D.pretty[n] || n)}
+        <span class=share>${Math.round(sh * 100)}%</span></label>`).join("")}
+    <div class=hint>% = share of this route’s distance. Ticked routes draw on top of the selected one.</div>`}
+    <a class=btn href="${r.gpx}" download>Download GPX</a>
+    <button class="btn ghost" id=back>← All ${document.getElementById("count").textContent}</button>`);
+  document.getElementById("back").onclick = () => select(null);
+
+  const boxes = [...document.querySelectorAll("#box input.src")];
+  const all = document.getElementById("src-all");
+  const draw = () => m.getSource("src").setData(fc(boxes.filter(b => b.checked).map(b => {
+    const i = +b.dataset.i, n = r.src[i][0];
+    return lineF(D.club[n], { color: SRC_COLORS[i % SRC_COLORS.length] });
+  })));
+  if (all) {
+    boxes.forEach(b => b.onchange = () => { all.checked = boxes.every(x => x.checked); draw(); });
+    all.onchange = () => { boxes.forEach(b => b.checked = all.checked); draw(); };
+  }
+
+  const bb = new maplibregl.LngLatBounds();
+  r.line.forEach(([la, lo]) => bb.extend([lo, la]));
+  showProfile(r);
+  const wide = window.innerWidth > 600;
+  m.fitBounds(bb, { padding: { top: 40, bottom: wide ? 190 : 380, left: wide ? 320 : 30, right: wide ? 330 : 30 }, maxZoom: 13 });
+}
+</script>
